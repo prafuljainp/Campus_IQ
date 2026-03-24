@@ -98,36 +98,6 @@ The app will be at `http://localhost:5173`
 
 ---
 
-## 🌐 Deployment
-
-### Backend → Render / Railway
-
-1. Push the `backend/` folder to GitHub
-2. On Render: **New Web Service** → connect repo
-3. Set:
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-   - **Runtime**: Python 3.11
-4. Set Environment Variables:
-   ```
-   SECRET_KEY=<random-32-char-string>
-   DATABASE_URL=postgresql://...  (use Render's PostgreSQL addon)
-   FRONTEND_URL=https://your-app.vercel.app
-   ENVIRONMENT=production
-   ```
-
-### Frontend → Vercel
-
-1. Push the `frontend/` folder to GitHub
-2. On Vercel: **New Project** → import repo → set root to `frontend/`
-3. Set Environment Variable:
-   ```
-   VITE_API_URL=https://your-backend.onrender.com/api
-   ```
-4. Deploy!
-
----
-
 ## 📁 Project Structure
 
 ```
