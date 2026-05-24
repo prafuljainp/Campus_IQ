@@ -23,6 +23,28 @@ export const analyticsAPI = {
   skillGap: (studentId) => api.get(`/analytics/skill-gap/${studentId}`),
 }
 
+export const studentSuccessAPI = {
+  commandCenter: (params) => api.get('/student-success/command-center', { params }),
+  profile: (studentId) => api.get(`/student-success/students/${studentId}`),
+  simulate: (studentId, scenario) => api.post(`/student-success/students/${studentId}/what-if`, scenario),
+}
+
+export const aptitudeAPI = {
+  dashboard: () => api.get('/aptitude/dashboard'),
+  staffDashboard: () => api.get('/aptitude/admin/dashboard'),
+  tests: (params) => api.get('/aptitude/tests', { params }),
+  startTest: (testId) => api.post(`/aptitude/tests/${testId}/start`),
+  submitAttempt: (attemptId, payload) => api.post(`/aptitude/attempts/${attemptId}/submit`, payload),
+  getAttempt: (attemptId) => api.get(`/aptitude/attempts/${attemptId}`),
+  questions: (params) => api.get('/aptitude/questions', { params }),
+  createQuestion: (payload) => api.post('/aptitude/questions', payload),
+  updateQuestion: (questionId, payload) => api.put(`/aptitude/questions/${questionId}`, payload),
+  deleteQuestion: (questionId) => api.delete(`/aptitude/questions/${questionId}`),
+  createTest: (payload) => api.post('/aptitude/tests', payload),
+  updateTest: (testId, payload) => api.put(`/aptitude/tests/${testId}`, payload),
+  deleteTest: (testId) => api.delete(`/aptitude/tests/${testId}`),
+}
+
 // ── Departments ───────────────────────────────────────────────────────────────
 export const departmentsAPI = {
   list: () => api.get('/departments'),
@@ -137,4 +159,59 @@ export const skillsAPI = {
 // ── Activity Logs ─────────────────────────────────────────────────────────────
 export const logsAPI = {
   list: (params) => api.get('/logs', { params }),
+}
+
+// ── AI Analysis ───────────────────────────────────────────────────────────────
+export const aiAnalysisAPI = {
+  getCompleteAnalysis: (studentId) => api.get('/ai/analysis', { params: { student_id: studentId } }),
+  getSummary: (studentId) => api.get('/ai/summary', { params: { student_id: studentId } }),
+  getBacklogAnalysis: (studentId) => api.get('/ai/backlog-analysis', { params: { student_id: studentId } }),
+  getAttendanceAnalysis: (studentId) => api.get('/ai/attendance-analysis', { params: { student_id: studentId } }),
+  getWeaknessAnalysis: (studentId) => api.get('/ai/weakness-analysis', { params: { student_id: studentId } }),
+  getPlacementAnalysis: (studentId) => api.get('/ai/placement-analysis', { params: { student_id: studentId } }),
+  getCareerRecommendation: (studentId) => api.get('/ai/career-recommendation', { params: { student_id: studentId } }),
+  analyzeResume: (studentId, file) => {
+    const formData = new FormData()
+    if (file) formData.append('file', file)
+    formData.append('student_id', studentId)
+    return api.post('/ai/resume-analysis', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
+}
+
+// ── Advanced Analytics (Phase 2) ───────────────────────────────────────────────
+export const advancedAnalyticsAPI = {
+  getGraduationPrediction: (studentId) => api.get('/analytics/graduation-prediction', { params: { student_id: studentId } }),
+  getCareerRecommendations: (studentId) => api.get('/analytics/career-recommendations', { params: { student_id: studentId } }),
+  getPlacementPrediction: (studentId) => api.get('/analytics/placement-prediction', { params: { student_id: studentId } }),
+  getStudentAnalyticsDashboard: (studentId) => api.get('/analytics/student-analytics-dashboard', { params: { student_id: studentId } }),
+  getDataWarehouseSchema: () => api.get('/analytics/data-warehouse-schema'),
+}
+
+// ── AI Intelligence (New) ──────────────────────────────────────────────────────
+export const aiInsightsAPI = {
+  // Health Score
+  getHealthScore: (studentId) => api.get('/ai/health-score', { params: { student_id: studentId } }),
+  
+  // Placement Probability
+  getPlacementProbability: (studentId) => api.get('/ai/placement-probability', { params: { student_id: studentId } }),
+  
+  // What-If Simulation
+  simulateImprovement: (studentId, scenario) => api.post('/ai/what-if-simulation', scenario, { params: { student_id: studentId } }),
+  
+  // Action Plan & Recommendations
+  getActionPlan: (studentId) => api.get('/ai/action-plan', { params: { student_id: studentId } }),
+  getAlerts: (studentId) => api.get('/ai/alerts', { params: { student_id: studentId } }),
+  
+  // Company Matching
+  getCompanyMatches: (studentId) => api.get('/ai/company-matching', { params: { student_id: studentId } }),
+  analyzeSkillGaps: (studentId) => api.get('/ai/skill-gap-analysis', { params: { student_id: studentId } }),
+  
+  // Summary
+  getCompleteSummary: (studentId) => api.get('/ai/complete-summary', { params: { student_id: studentId } }),
+  
+  // Admin Analytics
+  getAdminAnalytics: (departmentId) => api.get('/ai/admin/dashboard-analytics', { params: { department_id: departmentId } }),
+  getDepartmentComparison: () => api.get('/ai/admin/department-comparison'),
+  getPlacementTrends: () => api.get('/ai/admin/placement-trends'),
+  getAdminRecommendations: (departmentId) => api.get('/ai/admin/recommendations', { params: { department_id: departmentId } }),
 }

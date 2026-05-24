@@ -15,6 +15,7 @@ const PAGE_TITLES = {
   '/ranking': 'Student Rankings',
   '/notices': 'Notices',
   '/analytics': 'Analytics',
+  '/student-success': 'Success Center',
   '/logs': 'Activity Logs',
 }
 

@@ -30,18 +30,22 @@ export default function AttendancePage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [sumRes, subjRes] = await Promise.allSettled([
+      const [sumRes, subjRes, studRes] = await Promise.allSettled([
         attendanceAPI.summary(),
         subjectsAPI.list(),
+        canEdit ? studentsAPI.list({ per_page: 100 }) : Promise.resolve({ data: { items: [] } }),
       ])
       if (sumRes.status === 'fulfilled') setSummary(sumRes.value.data || [])
       if (subjRes.status === 'fulfilled') setSubjects(subjRes.value.data || [])
-
-      if (canEdit) {
-        const studRes = await studentsAPI.list({ per_page: 200 }).catch(() => null)
-        if (studRes) setStudents(studRes.data?.items || [])
+      if (studRes.status === 'fulfilled') {
+        const items = studRes.value?.data?.items || []
+        if (items.length === 0 && canEdit) console.warn('No students returned from API')
+        setStudents(items)
+      } else if (studRes.status === 'rejected') {
+        console.error('Failed to fetch students:', studRes.reason)
       }
     } catch (e) {
+      console.error('Failed to load attendance data:', e)
       toast.error('Failed to load attendance data')
     } finally {
       setLoading(false)

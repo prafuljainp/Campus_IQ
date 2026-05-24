@@ -6,7 +6,8 @@ from datetime import date, datetime
 from sqlalchemy.orm import Session
 from app.models import (
     User, Department, Faculty, Student, Subject,
-    Skill, StudentSkill, Attendance, Marks, Placement, Internship, Notice
+    Skill, StudentSkill, Attendance, Marks, Placement, Internship, Notice,
+    AptitudeQuestion, AptitudeTest, AptitudeTestQuestion
 )
 from app.core.security import get_password_hash
 import random
@@ -29,14 +30,282 @@ COMPANIES = [
     ("Cognizant", "Programmer Analyst", 4.0),
 ]
 
+APTITUDE_QUESTIONS = [
+    {
+        "category": "Quantitative Aptitude",
+        "topic": "Percentages",
+        "difficulty": "easy",
+        "question_text": "A number is increased by 20% and then decreased by 20%. What is the net percentage change?",
+        "options": ["No change", "4% decrease", "4% increase", "2% decrease"],
+        "correct_option": 1,
+        "explanation": "Using 100 as the base: 100 -> 120 -> 96, so the net change is a 4% decrease.",
+    },
+    {
+        "category": "Quantitative Aptitude",
+        "topic": "Percentages",
+        "difficulty": "easy",
+        "question_text": "If 35% of a number is 140, what is the number?",
+        "options": ["350", "375", "400", "420"],
+        "correct_option": 2,
+        "explanation": "Number = 140 / 0.35 = 400.",
+    },
+    {
+        "category": "Quantitative Aptitude",
+        "topic": "Time and Work",
+        "difficulty": "medium",
+        "question_text": "A can complete a work in 12 days and B in 18 days. Together, how many days will they take?",
+        "options": ["6.5 days", "7.2 days", "8 days", "9 days"],
+        "correct_option": 1,
+        "explanation": "Combined work per day = 1/12 + 1/18 = 5/36, so time = 36/5 = 7.2 days.",
+    },
+    {
+        "category": "Quantitative Aptitude",
+        "topic": "Profit and Loss",
+        "difficulty": "medium",
+        "question_text": "An item is sold for Rs. 920 at a loss of 8%. What was its cost price?",
+        "options": ["Rs. 960", "Rs. 1000", "Rs. 1040", "Rs. 1120"],
+        "correct_option": 1,
+        "explanation": "Selling price is 92% of cost price, so cost price = 920 / 0.92 = 1000.",
+    },
+    {
+        "category": "Quantitative Aptitude",
+        "topic": "Ratios",
+        "difficulty": "easy",
+        "question_text": "The ratio of boys to girls in a class is 3:2. If there are 45 students, how many girls are there?",
+        "options": ["15", "18", "20", "27"],
+        "correct_option": 1,
+        "explanation": "Total parts = 5. Girls = 2/5 of 45 = 18.",
+    },
+    {
+        "category": "Quantitative Aptitude",
+        "topic": "Averages",
+        "difficulty": "easy",
+        "question_text": "The average of five numbers is 24. If one number is removed, the average becomes 22. What is the removed number?",
+        "options": ["28", "30", "32", "34"],
+        "correct_option": 2,
+        "explanation": "Original sum = 5 x 24 = 120. New sum = 4 x 22 = 88. Removed number = 32.",
+    },
+    {
+        "category": "Logical Reasoning",
+        "topic": "Number Series",
+        "difficulty": "easy",
+        "question_text": "Find the next number in the series: 2, 6, 12, 20, 30, ?",
+        "options": ["40", "42", "44", "46"],
+        "correct_option": 1,
+        "explanation": "Differences are 4, 6, 8, 10, so the next difference is 12. Answer = 42.",
+    },
+    {
+        "category": "Logical Reasoning",
+        "topic": "Coding-Decoding",
+        "difficulty": "medium",
+        "question_text": "If CAMP is coded as DBNQ, how is TEST coded?",
+        "options": ["UFTU", "UDTU", "UFSU", "VFTU"],
+        "correct_option": 0,
+        "explanation": "Each letter is shifted one position forward: T->U, E->F, S->T, T->U.",
+    },
+    {
+        "category": "Logical Reasoning",
+        "topic": "Directions",
+        "difficulty": "medium",
+        "question_text": "A person walks 5 km north, turns right and walks 3 km, then turns right and walks 5 km. How far is the person from the start?",
+        "options": ["2 km", "3 km", "5 km", "8 km"],
+        "correct_option": 1,
+        "explanation": "The north and south movements cancel out. The person is 3 km east of the start.",
+    },
+    {
+        "category": "Logical Reasoning",
+        "topic": "Blood Relations",
+        "difficulty": "easy",
+        "question_text": "Pointing to a woman, Ravi said, 'She is the daughter of my mother's only son.' How is the woman related to Ravi?",
+        "options": ["Sister", "Daughter", "Niece", "Cousin"],
+        "correct_option": 1,
+        "explanation": "Ravi's mother's only son is Ravi. The woman is Ravi's daughter.",
+    },
+    {
+        "category": "Logical Reasoning",
+        "topic": "Syllogisms",
+        "difficulty": "medium",
+        "question_text": "All engineers are graduates. Some graduates are artists. Which conclusion definitely follows?",
+        "options": ["All engineers are artists", "Some engineers are artists", "All engineers are graduates", "No artists are engineers"],
+        "correct_option": 2,
+        "explanation": "The first statement directly guarantees that all engineers are graduates.",
+    },
+    {
+        "category": "Logical Reasoning",
+        "topic": "Seating Arrangement",
+        "difficulty": "medium",
+        "question_text": "A, B, C, and D sit in a row. B is to the right of A. C is to the left of D. A is leftmost. Which person can be second from the left?",
+        "options": ["Only B", "Only C", "Either B or C", "Only D"],
+        "correct_option": 2,
+        "explanation": "A must be first. B must be right of A, and C must be left of D, so either B or C can be second depending on order.",
+    },
+    {
+        "category": "Verbal Ability",
+        "topic": "Grammar",
+        "difficulty": "easy",
+        "question_text": "Choose the correct sentence.",
+        "options": ["She don't like tea.", "She doesn't likes tea.", "She doesn't like tea.", "She not like tea."],
+        "correct_option": 2,
+        "explanation": "With 'doesn't', the base verb 'like' is used.",
+    },
+    {
+        "category": "Verbal Ability",
+        "topic": "Synonyms",
+        "difficulty": "easy",
+        "question_text": "Choose the synonym of 'abundant'.",
+        "options": ["Scarce", "Plentiful", "Weak", "Tiny"],
+        "correct_option": 1,
+        "explanation": "'Abundant' means available in large quantity, which is closest to 'plentiful'.",
+    },
+    {
+        "category": "Verbal Ability",
+        "topic": "Antonyms",
+        "difficulty": "easy",
+        "question_text": "Choose the antonym of 'expand'.",
+        "options": ["Extend", "Grow", "Contract", "Increase"],
+        "correct_option": 2,
+        "explanation": "The opposite of expand is contract.",
+    },
+    {
+        "category": "Verbal Ability",
+        "topic": "Sentence Correction",
+        "difficulty": "medium",
+        "question_text": "Identify the correct phrase: 'Neither of the answers ___ correct.'",
+        "options": ["are", "were", "is", "have been"],
+        "correct_option": 2,
+        "explanation": "'Neither' is treated as singular here, so 'is' is correct.",
+    },
+    {
+        "category": "Verbal Ability",
+        "topic": "Reading Comprehension",
+        "difficulty": "medium",
+        "question_text": "A passage says a product is 'cost-effective but not premium'. What does this imply?",
+        "options": ["It is expensive and luxurious", "It gives value for money but may lack high-end features", "It is not useful", "It is only for experts"],
+        "correct_option": 1,
+        "explanation": "Cost-effective means good value. Not premium means it may not include high-end features.",
+    },
+    {
+        "category": "Technical Aptitude",
+        "topic": "Programming Logic",
+        "difficulty": "easy",
+        "question_text": "What is the output of 5 % 2 in most programming languages?",
+        "options": ["0", "1", "2", "2.5"],
+        "correct_option": 1,
+        "explanation": "The modulo operator returns the remainder. 5 divided by 2 leaves remainder 1.",
+    },
+    {
+        "category": "Technical Aptitude",
+        "topic": "Data Structures",
+        "difficulty": "medium",
+        "question_text": "Which data structure follows FIFO order?",
+        "options": ["Stack", "Queue", "Tree", "Graph"],
+        "correct_option": 1,
+        "explanation": "A queue follows First In, First Out order.",
+    },
+    {
+        "category": "Technical Aptitude",
+        "topic": "Databases",
+        "difficulty": "medium",
+        "question_text": "Which SQL clause is used to filter grouped records?",
+        "options": ["WHERE", "HAVING", "ORDER BY", "LIMIT"],
+        "correct_option": 1,
+        "explanation": "HAVING filters groups after GROUP BY; WHERE filters rows before grouping.",
+    },
+    {
+        "category": "Technical Aptitude",
+        "topic": "Algorithms",
+        "difficulty": "medium",
+        "question_text": "Binary search on a sorted array of 1024 elements needs at most how many comparisons?",
+        "options": ["8", "9", "10", "1024"],
+        "correct_option": 2,
+        "explanation": "1024 is 2^10, so binary search takes at most 10 comparisons in the ideal halving model.",
+    },
+]
+
+APTITUDE_TESTS = [
+    {
+        "title": "Placement Aptitude Starter Mock",
+        "description": "A balanced mock covering quant, reasoning, verbal and technical basics.",
+        "category": "Mixed Aptitude",
+        "difficulty": "easy",
+        "duration_minutes": 18,
+        "topics": ["Percentages", "Ratios", "Number Series", "Blood Relations", "Grammar", "Synonyms", "Programming Logic", "Data Structures"],
+    },
+    {
+        "title": "Quantitative Aptitude Sprint",
+        "description": "Quick practice for arithmetic questions commonly seen in campus hiring rounds.",
+        "category": "Quantitative Aptitude",
+        "difficulty": "medium",
+        "duration_minutes": 15,
+        "topics": ["Percentages", "Time and Work", "Profit and Loss", "Ratios", "Averages"],
+    },
+    {
+        "title": "Reasoning and Verbal Interview Drill",
+        "description": "Reasoning and language questions to improve accuracy before interviews.",
+        "category": "Reasoning and Verbal",
+        "difficulty": "medium",
+        "duration_minutes": 16,
+        "topics": ["Coding-Decoding", "Directions", "Syllogisms", "Seating Arrangement", "Grammar", "Antonyms", "Sentence Correction", "Reading Comprehension"],
+    },
+]
+
+
+def seed_aptitude_data(db: Session):
+    """Seed aptitude questions/tests independently of the main demo data."""
+    if db.query(AptitudeQuestion).count() == 0:
+        question_objs = []
+        for item in APTITUDE_QUESTIONS:
+            question = AptitudeQuestion(**item)
+            db.add(question)
+            question_objs.append(question)
+        db.flush()
+    else:
+        question_objs = db.query(AptitudeQuestion).filter(AptitudeQuestion.is_active == True).all()
+
+    if db.query(AptitudeTest).count() > 0:
+        db.commit()
+        return
+
+    questions_by_topic = {}
+    for question in question_objs:
+        questions_by_topic.setdefault(question.topic, []).append(question)
+
+    admin_user = db.query(User).filter(User.role == "super_admin").first()
+    for item in APTITUDE_TESTS:
+        test = AptitudeTest(
+            title=item["title"],
+            description=item["description"],
+            category=item["category"],
+            difficulty=item["difficulty"],
+            duration_minutes=item["duration_minutes"],
+            is_published=True,
+            created_by=admin_user.id if admin_user else None,
+        )
+        db.add(test)
+        db.flush()
+
+        selected_questions = []
+        for topic in item["topics"]:
+            selected_questions.extend(questions_by_topic.get(topic, [])[:1])
+
+        for index, question in enumerate(selected_questions):
+            db.add(AptitudeTestQuestion(
+                test_id=test.id,
+                question_id=question.id,
+                sort_order=index,
+            ))
+
+    db.commit()
+
 
 def seed_database(db: Session):
     """Seed demo data if the database is empty."""
     # Check if already seeded
     if db.query(User).count() > 0:
+        seed_aptitude_data(db)
         return
 
-    print("🌱 Seeding demo data...")
+    print("Seeding demo data...")
 
     # ── Skills ──────────────────────────────────────────────────────────────
     skills = []
@@ -281,8 +550,9 @@ def seed_database(db: Session):
         )
         db.add(notice)
 
+    seed_aptitude_data(db)
     db.commit()
-    print("✅ Demo data seeded successfully!")
+    print("Demo data seeded successfully.")
     print("   Admin: admin@campusiq.edu / Admin@123")
     print("   HOD:   hod.cse@campusiq.edu / Faculty@123")
     print("   Faculty: faculty.cs1@campusiq.edu / Faculty@123")

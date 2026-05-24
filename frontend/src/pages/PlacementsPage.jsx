@@ -87,18 +87,22 @@ export default function PlacementsPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [pRes, iRes] = await Promise.allSettled([
+      const [pRes, iRes, stRes] = await Promise.allSettled([
         placementsAPI.list(),
         internshipsAPI.list(),
+        canEdit ? studentsAPI.list({ per_page: 100 }) : Promise.resolve({ data: { items: [] } }),
       ])
       if (pRes.status === 'fulfilled') setPlacements(pRes.value.data || [])
       if (iRes.status === 'fulfilled') setInternships(iRes.value.data || [])
-
-      if (canEdit) {
-        const stRes = await studentsAPI.list({ per_page: 200 }).catch(() => null)
-        if (stRes) setStudents(stRes.data?.items || [])
+      if (stRes.status === 'fulfilled') {
+        const items = stRes.value?.data?.items || []
+        if (items.length === 0 && canEdit) console.warn('No students returned from API')
+        setStudents(items)
+      } else if (stRes.status === 'rejected') {
+        console.error('Failed to fetch students:', stRes.reason)
       }
-    } catch {
+    } catch (e) {
+      console.error('Failed to load placement data:', e)
       toast.error('Failed to load placement data')
     } finally {
       setLoading(false)

@@ -182,3 +182,57 @@ class NoticeCreate(BaseModel):
 class SkillCreate(BaseModel):
     name: str
     category: Optional[str] = None
+
+
+# --- Aptitude Preparation -------------------------------------------------------
+
+class AptitudeQuestionCreate(BaseModel):
+    category: str
+    topic: str
+    difficulty: str = "medium"
+    question_text: str
+    options: List[str]
+    correct_option: int
+    explanation: Optional[str] = None
+
+
+class AptitudeQuestionUpdate(BaseModel):
+    category: Optional[str] = None
+    topic: Optional[str] = None
+    difficulty: Optional[str] = None
+    question_text: Optional[str] = None
+    options: Optional[List[str]] = None
+    correct_option: Optional[int] = None
+    explanation: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class AptitudeTestCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    category: str = "Mixed Aptitude"
+    difficulty: str = "medium"
+    duration_minutes: int = 20
+    is_published: bool = True
+    question_ids: Optional[List[int]] = None
+
+
+class AptitudeTestUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+    difficulty: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    is_published: Optional[bool] = None
+    question_ids: Optional[List[int]] = None
+
+
+class AptitudeAnswerSubmit(BaseModel):
+    question_id: int
+    selected_option: Optional[int] = None
+    time_spent_seconds: int = 0
+
+
+class AptitudeAttemptSubmit(BaseModel):
+    answers: List[AptitudeAnswerSubmit]
+    duration_seconds: Optional[int] = None

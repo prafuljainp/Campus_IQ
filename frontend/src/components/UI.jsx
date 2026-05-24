@@ -140,7 +140,7 @@ export function Select({ value, onChange, options, placeholder = 'Select...', cl
       className={`input ${className}`}>
       <option value="">{placeholder}</option>
       {options.map(opt => (
-        <option key={opt.value} value={opt.value}>{opt.label}</option>
+        <option key={opt.value} value={String(opt.value)}>{opt.label}</option>
       ))}
     </select>
   )

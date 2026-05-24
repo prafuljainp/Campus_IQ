@@ -131,6 +131,7 @@ class Student(Base):
     marks_records = relationship("Marks", back_populates="student")
     placements = relationship("Placement", back_populates="student")
     internships = relationship("Internship", back_populates="student")
+    aptitude_attempts = relationship("AptitudeAttempt", back_populates="student")
 
 
 # ─── Faculty Model ────────────────────────────────────────────────────────────
@@ -258,6 +259,101 @@ class Internship(Base):
 
     # Relationships
     student = relationship("Student", back_populates="internships")
+
+
+# --- Aptitude Preparation Models ------------------------------------------------
+
+class AptitudeQuestion(Base):
+    __tablename__ = "aptitude_questions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    category = Column(String(100), nullable=False, index=True)
+    topic = Column(String(120), nullable=False, index=True)
+    difficulty = Column(String(50), default="medium", index=True)
+    question_text = Column(Text, nullable=False)
+    options = Column(JSON, nullable=False)
+    correct_option = Column(Integer, nullable=False)
+    explanation = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    test_links = relationship("AptitudeTestQuestion", back_populates="question")
+    answers = relationship("AptitudeAttemptAnswer", back_populates="question")
+
+
+class AptitudeTest(Base):
+    __tablename__ = "aptitude_tests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(180), nullable=False, unique=True)
+    description = Column(Text, nullable=True)
+    category = Column(String(100), default="Mixed Aptitude", index=True)
+    difficulty = Column(String(50), default="medium", index=True)
+    duration_minutes = Column(Integer, default=20)
+    is_published = Column(Boolean, default=True)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    questions = relationship(
+        "AptitudeTestQuestion",
+        back_populates="test",
+        cascade="all, delete-orphan",
+        order_by="AptitudeTestQuestion.sort_order",
+    )
+    attempts = relationship("AptitudeAttempt", back_populates="test")
+
+
+class AptitudeTestQuestion(Base):
+    __tablename__ = "aptitude_test_questions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    test_id = Column(Integer, ForeignKey("aptitude_tests.id"), nullable=False)
+    question_id = Column(Integer, ForeignKey("aptitude_questions.id"), nullable=False)
+    sort_order = Column(Integer, default=0)
+
+    test = relationship("AptitudeTest", back_populates="questions")
+    question = relationship("AptitudeQuestion", back_populates="test_links")
+
+
+class AptitudeAttempt(Base):
+    __tablename__ = "aptitude_attempts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    test_id = Column(Integer, ForeignKey("aptitude_tests.id"), nullable=False)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
+    status = Column(String(50), default="in_progress")
+    started_at = Column(DateTime, default=datetime.utcnow)
+    submitted_at = Column(DateTime, nullable=True)
+    duration_seconds = Column(Integer, default=0)
+    score = Column(Float, default=0.0)
+    total_questions = Column(Integer, default=0)
+    correct_answers = Column(Integer, default=0)
+    accuracy = Column(Float, default=0.0)
+    topic_breakdown = Column(JSON, nullable=True)
+    recommendations = Column(JSON, nullable=True)
+
+    test = relationship("AptitudeTest", back_populates="attempts")
+    student = relationship("Student", back_populates="aptitude_attempts")
+    answers = relationship(
+        "AptitudeAttemptAnswer",
+        back_populates="attempt",
+        cascade="all, delete-orphan",
+    )
+
+
+class AptitudeAttemptAnswer(Base):
+    __tablename__ = "aptitude_attempt_answers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    attempt_id = Column(Integer, ForeignKey("aptitude_attempts.id"), nullable=False)
+    question_id = Column(Integer, ForeignKey("aptitude_questions.id"), nullable=False)
+    selected_option = Column(Integer, nullable=True)
+    is_correct = Column(Boolean, default=False)
+    time_spent_seconds = Column(Integer, default=0)
+
+    attempt = relationship("AptitudeAttempt", back_populates="answers")
+    question = relationship("AptitudeQuestion", back_populates="answers")
 
 
 # ─── Skill Models ─────────────────────────────────────────────────────────────

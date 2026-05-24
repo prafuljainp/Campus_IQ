@@ -12,8 +12,17 @@ import AttendancePage from './pages/AttendancePage'
 import { MarksPage } from './pages/MarksPage'
 import { NoticesPage } from './pages/NoticesPage'
 import AnalyticsPage from './pages/AnalyticsPage'
+import StudentSuccessPage from './pages/StudentSuccessPage'
+import AptitudePage from './pages/AptitudePage'
 import { ActivityLogsPage } from './pages/NoticesPage'
 import { RankingPage } from './pages/NoticesPage'
+// Phase 3 Pages
+import JobPortalPage from './pages/JobPortalPage'
+import NotificationsPage from './pages/NotificationsPage'
+// Phase 4 Pages
+import AlumniPage from './pages/AlumniPage'
+// Phase 5 Pages
+import EnterprisePage from './pages/EnterprisePage'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore()
@@ -43,8 +52,20 @@ export default function App() {
         <Route path="marks" element={<MarksPage />} />
         <Route path="notices" element={<NoticesPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="student-success" element={<StudentSuccessPage />} />
+        <Route path="aptitude" element={<AptitudePage />} />
         <Route path="ranking" element={<RankingPage />} />
         <Route path="logs" element={<ActivityLogsPage />} />
+        
+        {/* Phase 3 - Integration */}
+        <Route path="job-portal" element={<JobPortalPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
+        
+        {/* Phase 4 - Engagement */}
+        <Route path="alumni" element={<AlumniPage />} />
+        
+        {/* Phase 5 - Enterprise */}
+        <Route path="enterprise" element={<EnterprisePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

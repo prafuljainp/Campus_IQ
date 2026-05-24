@@ -1,231 +1,203 @@
-# 🎓 CampusIQ – AI Powered College ERP & Placement Intelligence System
+# CampusIQ
 
-A full-stack, production-ready College ERP system with AI-powered skill gap analysis, placement intelligence, attendance tracking, and comprehensive student management.
+CampusIQ is a full-stack college ERP and placement intelligence platform. It combines core academic management, analytics, placement support, student success insights, and aptitude preparation in one portal.
 
----
+## Features
 
-## 🚀 Tech Stack
+- Role-based login for super admin, HOD, faculty, and students
+- Student, faculty, department, attendance, marks, notice, and placement modules
+- Analytics dashboards for academic and placement performance
+- AI-powered student success and placement readiness insights
+- Job portal, notifications, alumni/mentor, and enterprise modules
+- Aptitude preparation module with timed tests, scoring, explanations, staff question bank management, and attempt analytics
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | FastAPI + SQLAlchemy + Pydantic |
-| Auth | JWT + bcrypt |
-| Database | SQLite (dev) / PostgreSQL (prod) |
-| Frontend | React 18 + Vite + Tailwind CSS |
-| Charts | Recharts |
-| State | Zustand |
-| Deployment | Render (backend) + Vercel (frontend) |
+## Tech Stack
 
----
+Backend:
+- FastAPI
+- SQLAlchemy
+- SQLite for local development
+- Pydantic
+- JWT authentication
 
-## ✨ Features
+Frontend:
+- React
+- Vite
+- Tailwind CSS
+- Axios
+- Zustand
+- Recharts
+- Lucide React
 
-### Core Modules
-- **Multi-Role Auth** — Super Admin, HOD, Faculty, Student
-- **Student Management** — Full CRUD with 20+ fields, search, filter, pagination
-- **Faculty Management** — Department mapping, subject assignment
-- **Department Management** — Stats, HOD assignment
-- **Academic Records** — Marks entry, auto CGPA calculation, grade logic
-- **Attendance System** — Mark/bulk, percentage, low-attendance alerts
-- **Placement Tracker** — Company, role, package, CSV export
-- **Internship Records** — Duration, stipend tracking
-- **Notice Board** — Department-targeted announcements
+## Project Structure
 
-### Advanced Features
-- **🤖 AI Skill Gap Analyzer** — Recommends missing skills based on placement data
-- **🎯 Career Advisor** — Rule-based career path recommendations
-- **🏆 Student Ranking** — Leaderboard scored by CGPA + Skills + Internships
-- **✅ Placement Eligibility Checker** — CGPA & backlog validation
-- **🪪 Student ID Card Generator** — Printable ID with barcode
-- **📊 Analytics Dashboard** — Recharts-powered: CGPA dist, dept performance, trends
-- **📋 Activity Logs** — Full audit trail of all user actions
-- **📥 Export** — CSV export for students and placements
+```text
+campusiq/
+  backend/
+    app/
+      core/
+      models/
+      routers/
+      schemas/
+      services/
+      main.py
+      seed.py
+    requirements.txt
+  frontend/
+    src/
+      api/
+      components/
+      context/
+      pages/
+    package.json
+  scripts/
+    start-dev.ps1
+```
 
----
+## Requirements
 
-## 🔑 Demo Credentials
+- Python 3.9 or newer
+- Node.js 20 or newer
+- Git
 
-| Role | Email | Password |
-|------|-------|----------|
-| Super Admin | admin@campusiq.edu | Admin@123 |
-| HOD (CSE) | hod.cse@campusiq.edu | Faculty@123 |
-| Faculty | faculty.cs1@campusiq.edu | Faculty@123 |
-| Student | student1@campusiq.edu | Student@123 |
+## Backend Setup
 
----
+Windows PowerShell:
 
-## 🛠️ Local Development Setup
+```powershell
+cd backend
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
 
-### Backend
+macOS/Linux:
 
 ```bash
 cd backend
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-
-# Copy environment variables
 cp .env.example .env
-
-# Run the server
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The API will be at `http://localhost:8000`
-API docs at `http://localhost:8000/api/docs`
+Backend URLs:
 
-### Frontend
+- Health: http://127.0.0.1:8000/api/health
+- API docs: http://127.0.0.1:8000/api/docs
 
-```bash
+## Frontend Setup
+
+```powershell
 cd frontend
-
-# Install dependencies
 npm install
-
-# Create env file (for local dev with proxy it's not needed)
-# For custom backend URL, create .env:
-# VITE_API_URL=http://localhost:8000/api
-
-# Run dev server
+Copy-Item .env.example .env
 npm run dev
 ```
 
-The app will be at `http://localhost:5173`
+Frontend URL:
 
----
+- App: http://localhost:5173
 
-## 🌐 Deployment
+If `npm run dev` fails with `spawn C:\Program Files\dotnet ENOENT`, fix the current terminal:
 
-### Backend → Render / Railway
-
-1. Push the `backend/` folder to GitHub
-2. On Render: **New Web Service** → connect repo
-3. Set:
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-   - **Runtime**: Python 3.11
-4. Set Environment Variables:
-   ```
-   SECRET_KEY=<random-32-char-string>
-   DATABASE_URL=postgresql://...  (use Render's PostgreSQL addon)
-   FRONTEND_URL=https://your-app.vercel.app
-   ENVIRONMENT=production
-   ```
-
-### Frontend → Vercel
-
-1. Push the `frontend/` folder to GitHub
-2. On Vercel: **New Project** → import repo → set root to `frontend/`
-3. Set Environment Variable:
-   ```
-   VITE_API_URL=https://your-backend.onrender.com/api
-   ```
-4. Deploy!
-
----
-
-## 📁 Project Structure
-
-```
-campusiq/
-├── backend/
-│   ├── app/
-│   │   ├── core/
-│   │   │   ├── config.py       # Settings (Pydantic)
-│   │   │   ├── security.py     # JWT + bcrypt
-│   │   │   └── dependencies.py # Auth guards
-│   │   ├── models/
-│   │   │   └── __init__.py     # All SQLAlchemy models
-│   │   ├── schemas/
-│   │   │   └── __init__.py     # Pydantic schemas
-│   │   ├── routers/
-│   │   │   ├── auth.py
-│   │   │   ├── students.py
-│   │   │   ├── faculty.py
-│   │   │   ├── departments.py
-│   │   │   ├── subjects.py
-│   │   │   ├── marks.py
-│   │   │   ├── attendance.py
-│   │   │   ├── placements.py
-│   │   │   ├── notices.py
-│   │   │   ├── skills.py
-│   │   │   ├── logs.py
-│   │   │   └── analytics.py
-│   │   ├── main.py             # FastAPI app + startup
-│   │   ├── database.py         # DB engine + session
-│   │   └── seed.py             # Demo data seeder
-│   ├── requirements.txt
-│   └── runtime.txt
-│
-└── frontend/
-    └── src/
-        ├── api/
-        │   ├── client.js       # Axios + interceptors
-        │   └── services.js     # All API calls
-        ├── context/
-        │   └── authStore.js    # Zustand auth state
-        ├── components/
-        │   ├── Layout.jsx      # Shell + header
-        │   ├── Sidebar.jsx     # Nav + role filtering
-        │   └── UI.jsx          # Shared components
-        └── pages/
-            ├── LoginPage.jsx
-            ├── DashboardPage.jsx
-            ├── StudentsPage.jsx
-            ├── StudentProfilePage.jsx
-            ├── FacultyPage.jsx
-            ├── DepartmentsPage.jsx
-            ├── PlacementsPage.jsx
-            ├── AttendancePage.jsx
-            ├── MarksPage.jsx
-            ├── AnalyticsPage.jsx
-            ├── NoticesPage.jsx  (+ RankingPage, ActivityLogsPage)
+```powershell
+$env:ComSpec = "$env:WINDIR\System32\cmd.exe"
 ```
 
----
+## One-Command Local Start
 
-## 🔌 API Endpoints Summary
+After installing backend and frontend dependencies:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/auth/login | Login |
-| GET | /api/auth/me | Current user |
-| GET/POST | /api/students | List/Create students |
-| GET/PUT/DELETE | /api/students/{id} | Student CRUD |
-| GET | /api/students/ranking | Ranked leaderboard |
-| GET | /api/students/eligibility/{id} | Placement eligibility |
-| GET | /api/students/export/csv | CSV export |
-| GET/POST | /api/faculty | Faculty CRUD |
-| GET/POST | /api/departments | Department CRUD |
-| GET/POST | /api/marks | Marks entry + CGPA auto-calc |
-| GET/POST | /api/attendance | Attendance + percentage |
-| GET/POST | /api/placements | Placement records |
-| GET/POST | /api/notices | Notices |
-| GET | /api/analytics/summary | Dashboard stats |
-| GET | /api/analytics/skill-gap/{id} | AI skill gap analysis |
-| GET | /api/logs | Activity audit logs |
+```powershell
+.\scripts\start-dev.ps1
+```
 
----
+## Demo Logins
 
-## 🛡️ Role Permissions
+Seed data is created on first backend startup.
 
-| Feature | Admin | HOD | Faculty | Student |
-|---------|-------|-----|---------|---------|
-| All Students | ✅ | Dept only | ✅ | Own only |
-| Create/Delete Students | ✅ | ✅ | ❌ | ❌ |
-| Faculty Management | ✅ | ❌ | ❌ | ❌ |
-| Departments | ✅ | ❌ | ❌ | ❌ |
-| Enter Marks | ✅ | ✅ | ✅ | ❌ |
-| Mark Attendance | ✅ | ✅ | ✅ | ❌ |
-| Analytics | ✅ | ✅ | ✅ | ❌ |
-| Activity Logs | ✅ | ❌ | ❌ | ❌ |
+| Role | Email | Password |
+| --- | --- | --- |
+| Super Admin | admin@campusiq.edu | Admin@123 |
+| HOD | hod.cse@campusiq.edu | Faculty@123 |
+| Faculty | faculty.cs1@campusiq.edu | Faculty@123 |
+| Student | student1@campusiq.edu | Student@123 |
 
----
+## Aptitude Module
 
-## 📝 License
+Students can:
+- View available aptitude tests
+- Take timed tests
+- Submit answers
+- Review score, topic breakdown, correct answers, and explanations
 
-MIT License — Built for educational purposes.
+Staff can:
+- Add, edit, and archive aptitude questions
+- Create and update tests
+- Publish or unpublish tests
+- Review student attempt analytics
+- Track weak topics and average performance
+
+## Verification
+
+Backend syntax check:
+
+```powershell
+cd backend
+.\venv\Scripts\python.exe -m compileall app
+```
+
+Frontend production build:
+
+```powershell
+cd frontend
+$env:ComSpec = "$env:WINDIR\System32\cmd.exe"
+npm run build
+```
+
+If npm shell execution is broken, run Vite directly:
+
+```powershell
+node node_modules\vite\bin\vite.js build
+```
+
+## Repository Hygiene
+
+Do not commit generated or local runtime files:
+
+- `node_modules/`
+- `venv/`
+- `__pycache__/`
+- `dist/`
+- local `.env` files
+- local SQLite database files
+- log files
+
+Keep these tracked:
+
+- `.env.example`
+- `requirements.txt`
+- `package.json`
+- `package-lock.json`
+- source code
+- this README
+
+## Git Workflow
+
+```powershell
+git status
+git diff
+git add .
+git commit -m "Add aptitude preparation module"
+git push origin main
+```
+
+Review staged changes before committing:
+
+```powershell
+git diff --cached --stat
+```

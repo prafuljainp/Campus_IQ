@@ -38,12 +38,19 @@ export function MarksPage() {
       const [mRes, sRes, stRes] = await Promise.allSettled([
         marksAPI.list(params),
         subjectsAPI.list(),
-        canEdit ? studentsAPI.list({ per_page: 200 }) : Promise.resolve({ data: { items: [] } }),
+        canEdit ? studentsAPI.list({ per_page: 100 }) : Promise.resolve({ data: { items: [] } }),
       ])
       if (mRes.status === 'fulfilled') setMarks(mRes.value.data || [])
       if (sRes.status === 'fulfilled') setSubjects(sRes.value.data || [])
-      if (stRes.status === 'fulfilled') setStudents(stRes.value.data?.items || [])
+      if (stRes.status === 'fulfilled') {
+        const items = stRes.value?.data?.items || []
+        if (items.length === 0 && canEdit) console.warn('No students returned from API')
+        setStudents(items)
+      } else if (stRes.status === 'rejected') {
+        console.error('Failed to fetch students:', stRes.reason)
+      }
     } catch (e) {
+      console.error('Failed to load marks data:', e)
       toast.error('Failed to load marks data')
     } finally {
       setLoading(false)

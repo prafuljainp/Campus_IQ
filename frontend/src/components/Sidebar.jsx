@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users, GraduationCap, Building2, Briefcase,
   ClipboardCheck, BookOpen, Bell, BarChart3, Trophy, History,
-  LogOut, ChevronRight, Zap
+  LogOut, ChevronRight, Zap, BrainCircuit, ClipboardList
 } from 'lucide-react'
 import useAuthStore from '../context/authStore'
 import toast from 'react-hot-toast'
@@ -13,11 +13,20 @@ const NAV_ITEMS = [
   { to: '/faculty', icon: GraduationCap, label: 'Faculty', roles: ['super_admin', 'hod'] },
   { to: '/departments', icon: Building2, label: 'Departments', roles: ['super_admin'] },
   { to: '/placements', icon: Briefcase, label: 'Placements', roles: ['super_admin', 'hod', 'faculty', 'student'] },
+  { to: '/aptitude', icon: ClipboardList, label: 'Aptitude Prep', roles: ['super_admin', 'hod', 'faculty', 'student'] },
   { to: '/attendance', icon: ClipboardCheck, label: 'Attendance', roles: ['super_admin', 'hod', 'faculty', 'student'] },
   { to: '/marks', icon: BookOpen, label: 'Marks & Grades', roles: ['super_admin', 'hod', 'faculty', 'student'] },
   { to: '/ranking', icon: Trophy, label: 'Rankings', roles: ['super_admin', 'hod', 'faculty', 'student'] },
   { to: '/notices', icon: Bell, label: 'Notices', roles: ['super_admin', 'hod', 'faculty', 'student'] },
   { to: '/analytics', icon: BarChart3, label: 'Analytics', roles: ['super_admin', 'hod', 'faculty'] },
+  { to: '/student-success', icon: BrainCircuit, label: 'Success Center', roles: ['super_admin', 'hod', 'faculty', 'student'] },
+  // Phase 3 - Integration
+  { to: '/job-portal', icon: Briefcase, label: '💼 Job Portal', roles: ['student'] },
+  { to: '/notifications', icon: Bell, label: '🔔 Notifications', roles: ['super_admin', 'hod', 'faculty', 'student'] },
+  // Phase 4 - Engagement
+  { to: '/alumni', icon: Users, label: '👥 Alumni & Mentors', roles: ['super_admin', 'hod', 'faculty', 'student'] },
+  // Phase 5 - Enterprise
+  { to: '/enterprise', icon: Building2, label: '⚙️ Enterprise', roles: ['super_admin'] },
   { to: '/logs', icon: History, label: 'Activity Logs', roles: ['super_admin'] },
 ]
 

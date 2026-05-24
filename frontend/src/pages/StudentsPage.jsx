@@ -6,7 +6,7 @@
  */
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Download, Eye, Pencil, Trash2, ChevronUp, ChevronDown, RefreshCw } from 'lucide-react'
+import { Plus, Download, Eye, Pencil, Trash2, ChevronUp, ChevronDown, RefreshCw, X } from 'lucide-react'
 import { studentsAPI, departmentsAPI } from '../api/services'
 import { Modal, PageLoader, EmptyState, Pagination, SearchInput, Select, Field } from '../components/UI'
 import useAuthStore from '../context/authStore'
@@ -175,6 +175,14 @@ export default function StudentsPage() {
 
   const cgpaColor = (v) => v >= 8.5 ? 'text-emerald-600' : v >= 7 ? 'text-blue-600' : v >= 5 ? 'text-amber-600' : 'text-red-500'
 
+  const hasActiveFilters = search || deptFilter || semFilter
+  const clearFilters = () => {
+    setSearch('')
+    setDeptFilter('')
+    setSemFilter('')
+    setPage(1)
+  }
+
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Toolbar */}
@@ -185,6 +193,13 @@ export default function StudentsPage() {
           placeholder="All Depts" className="w-36" />
         <Select value={semFilter} onChange={v => { setSemFilter(v); setPage(1) }}
           options={SEMESTERS} placeholder="All Sems" className="w-32" />
+        
+        {hasActiveFilters && (
+          <button onClick={clearFilters} className="btn-secondary text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/20">
+            <X size={15} /> Clear Filters
+          </button>
+        )}
+        
         <div className="ml-auto flex items-center gap-2">
           <button onClick={load} className="btn-secondary"><RefreshCw size={15} /></button>
           {canEdit && (

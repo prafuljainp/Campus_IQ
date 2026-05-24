@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import { studentsAPI, marksAPI, placementsAPI, internshipsAPI, analyticsAPI } from '../api/services'
 import { PageLoader, GradeBadge, Spinner } from '../components/UI'
+import AIAnalysisTab from '../components/AIAnalysisTab'
+import AdvancedAnalyticsDashboard from '../components/AdvancedAnalyticsDashboard'
 import { format } from 'date-fns'
 
 function IDCard({ student }) {
@@ -52,8 +54,6 @@ export default function StudentProfilePage() {
   const [marks, setMarks] = useState([])
   const [placements, setPlacements] = useState([])
   const [internships, setInternships] = useState([])
-  const [skillGap, setSkillGap] = useState(null)
-  const [loadingGap, setLoadingGap] = useState(false)
   const [tab, setTab] = useState('overview')
   const [loading, setLoading] = useState(true)
 
@@ -71,17 +71,6 @@ export default function StudentProfilePage() {
     }).finally(() => setLoading(false))
   }, [id])
 
-  const loadSkillGap = async () => {
-    setLoadingGap(true)
-    try {
-      const r = await analyticsAPI.skillGap(id)
-      setSkillGap(r.data)
-      setTab('ai')
-    } catch (e) {
-      console.error(e)
-    } finally { setLoadingGap(false) }
-  }
-
   if (loading) return <PageLoader />
   if (!student) return <div className="text-center py-20 text-slate-400">Student not found</div>
 
@@ -92,6 +81,7 @@ export default function StudentProfilePage() {
     { id: 'internships', label: `Internships (${internships.length})` },
     { id: 'idcard', label: 'ID Card' },
     { id: 'ai', label: '🤖 AI Analysis' },
+    { id: 'analytics', label: '📊 Advanced Analytics' },
   ]
 
   const cgpaColor = student.cgpa >= 8.5 ? 'text-emerald-500' : student.cgpa >= 7 ? 'text-blue-500' : student.cgpa >= 5 ? 'text-amber-500' : 'text-red-500'
@@ -128,7 +118,7 @@ export default function StudentProfilePage() {
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit flex-wrap">
         {TABS.map(t => (
-          <button key={t.id} onClick={() => { setTab(t.id); if (t.id === 'ai' && !skillGap) loadSkillGap() }}
+          <button key={t.id} onClick={() => setTab(t.id)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t.id ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
             {t.label}
           </button>
@@ -310,85 +300,10 @@ export default function StudentProfilePage() {
       )}
 
       {/* AI Analysis Tab */}
-      {tab === 'ai' && (
-        <div className="space-y-4">
-          {loadingGap ? (
-            <div className="card p-16 flex flex-col items-center gap-4">
-              <Spinner size={32} />
-              <p className="text-slate-400">Analyzing skill profile...</p>
-            </div>
-          ) : skillGap ? (
-            <>
-              {/* Placement readiness */}
-              <div className={`card p-5 flex items-center gap-4 border-2 ${skillGap.placement_ready ? 'border-emerald-300 dark:border-emerald-700' : 'border-amber-300 dark:border-amber-700'}`}>
-                {skillGap.placement_ready
-                  ? <CheckCircle size={24} className="text-emerald-500 flex-shrink-0" />
-                  : <AlertTriangle size={24} className="text-amber-500 flex-shrink-0" />}
-                <div>
-                  <div className="font-bold text-slate-900 dark:text-white">
-                    {skillGap.placement_ready ? 'Placement Ready ✓' : 'Not Yet Placement Ready'}
-                  </div>
-                  <div className="text-sm text-slate-500">CGPA: {skillGap.cgpa} · {skillGap.current_skills?.length} skills</div>
-                </div>
-              </div>
+      {tab === 'ai' && <AIAnalysisTab studentId={parseInt(id)} />}
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Missing Skills */}
-                <div className="card p-6">
-                  <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                    <AlertTriangle size={16} className="text-amber-500" /> Missing High-Demand Skills
-                  </h3>
-                  <div className="space-y-3">
-                    {skillGap.missing_skills?.map((s, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-xs font-bold text-amber-600">!</div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{s.skill}</span>
-                            <span className="badge badge-amber">{s.category}</span>
-                          </div>
-                          <div className="mt-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full">
-                            <div className="h-full bg-amber-400 rounded-full" style={{ width: `${Math.min(100, s.demand_score * 20)}%` }} />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    {skillGap.missing_skills?.length === 0 && <p className="text-sm text-slate-400">No major skill gaps found!</p>}
-                  </div>
-                </div>
-
-                {/* Career Paths */}
-                <div className="card p-6">
-                  <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                    <Star size={16} className="text-blue-500" /> Career Recommendations
-                  </h3>
-                  <div className="space-y-4">
-                    {skillGap.career_recommendations?.map((r, i) => (
-                      <div key={i} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">{r.path}</span>
-                          <span className={`badge ${r.match === 'High' ? 'badge-green' : r.match === 'Medium' ? 'badge-blue' : 'badge-amber'}`}>{r.match} Match</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {r.next_steps?.map((step, j) => (
-                            <span key={j} className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg">→ {step}</span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="card p-8 text-center">
-              <button onClick={loadSkillGap} className="btn-primary mx-auto">
-                <Zap size={16} /> Run AI Analysis
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Advanced Analytics Tab (Phase 2) */}
+      {tab === 'analytics' && <AdvancedAnalyticsDashboard studentId={parseInt(id)} />}
     </div>
   )
 }
