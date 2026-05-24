@@ -1,27 +1,42 @@
 #!/usr/bin/env python3
-"""
-CampusIQ Startup Verification Script
-Verifies all components are ready to run
-"""
+"""Verify the local CampusIQ development setup."""
+
 import os
+import socket
 import sys
 from pathlib import Path
-import json
+
+
+def print_result(label, ok, warning=False):
+    status = "[OK]" if ok else ("[WARN]" if warning else "[MISSING]")
+    print(f"{status} {label}")
+
+
+def run_checks(title, checks, allow_warnings=None):
+    allow_warnings = allow_warnings or set()
+    print(f"\n{title}")
+    print("=" * 50)
+
+    passed = 0
+    required_total = 0
+    required_passed = 0
+
+    for label, ok in checks.items():
+        is_warning = label in allow_warnings
+        print_result(label, ok, warning=is_warning)
+        if ok:
+            passed += 1
+        if not is_warning:
+            required_total += 1
+            if ok:
+                required_passed += 1
+
+    print(f"\nPassed: {passed}/{len(checks)}")
+    return required_passed == required_total
+
 
 def check_backend():
-    """Check backend requirements"""
-    print("\n📦 BACKEND VERIFICATION")
-    print("=" * 50)
-    
-    backend_path = Path("backend")
-    checks = {
-        "Backend directory exists": backend_path.exists(),
-        "requirements.txt exists": (backend_path / "requirements.txt").exists(),
-        "app/main.py exists": (backend_path / "app" / "main.py").exists(),
-        "app/core/config.py exists": (backend_path / "app" / "core" / "config.py").exists(),
-    }
-    
-    # Check services
+    backend = Path("backend")
     services = [
         "ai_health_score_service.py",
         "ai_placement_service.py",
@@ -29,189 +44,143 @@ def check_backend():
         "ai_matching_service.py",
         "ai_analytics_service.py",
     ]
-    
+    routers = [
+        "auth.py",
+        "students.py",
+        "attendance.py",
+        "marks.py",
+        "placements.py",
+        "analytics.py",
+        "aptitude.py",
+        "ai_insights.py",
+        "ai_analysis.py",
+    ]
+
+    checks = {
+        "backend directory exists": backend.exists(),
+        "backend/requirements.txt exists": (backend / "requirements.txt").exists(),
+        "backend/.env exists": (backend / ".env").exists(),
+        "backend/app/main.py exists": (backend / "app" / "main.py").exists(),
+        "backend/app/database.py exists": (backend / "app" / "database.py").exists(),
+        "backend/app/models/__init__.py exists": (backend / "app" / "models" / "__init__.py").exists(),
+        "backend/app/schemas/__init__.py exists": (backend / "app" / "schemas" / "__init__.py").exists(),
+    }
+
     for service in services:
-        path = backend_path / "app" / "services" / service
-        checks[f"  {service}"] = path.exists()
-    
-    # Check routers
-    routers = ["ai_insights.py", "ai_analysis.py"]
+        checks[f"backend/app/services/{service} exists"] = (backend / "app" / "services" / service).exists()
+
     for router in routers:
-        path = backend_path / "app" / "routers" / router
-        checks[f"  {router}"] = path.exists()
-    
-    # Check .env
-    checks[".env file exists"] = (backend_path / ".env").exists()
-    
-    passed = 0
-    for check, status in checks.items():
-        status_str = "✅" if status else "❌"
-        print(f"{status_str} {check}")
-        if status:
-            passed += 1
-    
-    print(f"\nBackend: {passed}/{len(checks)} checks passed")
-    return all(checks.values())
+        checks[f"backend/app/routers/{router} exists"] = (backend / "app" / "routers" / router).exists()
+
+    return run_checks("BACKEND VERIFICATION", checks)
+
 
 def check_frontend():
-    """Check frontend requirements"""
-    print("\n💻 FRONTEND VERIFICATION")
-    print("=" * 50)
-    
-    frontend_path = Path("frontend")
-    checks = {
-        "Frontend directory exists": frontend_path.exists(),
-        "package.json exists": (frontend_path / "package.json").exists(),
-        "node_modules exists": (frontend_path / "node_modules").exists(),
-        "src/main.jsx exists": (frontend_path / "src" / "main.jsx").exists(),
-    }
-    
-    # Check AI components
-    components = [
-        "AIIntelligenceDashboard.jsx",
-        "AIIntelligence/HealthScoreCard.jsx",
-        "AIIntelligence/PlacementProbabilityCard.jsx",
-        "AIIntelligence/ActionPlanPanel.jsx",
-        "AIIntelligence/AlertsPanel.jsx",
-        "AIIntelligence/CompanyMatchingPanel.jsx",
-        "AIIntelligence/WhatIfSimulator.jsx",
+    frontend = Path("frontend")
+    pages = [
+        "DashboardPage.jsx",
+        "StudentsPage.jsx",
+        "StudentProfilePage.jsx",
+        "PlacementsPage.jsx",
+        "AttendancePage.jsx",
+        "MarksPage.jsx",
+        "AnalyticsPage.jsx",
+        "AptitudePage.jsx",
+        "StudentSuccessPage.jsx",
+        "JobPortalPage.jsx",
     ]
-    
+    components = [
+        "Layout.jsx",
+        "Sidebar.jsx",
+        "UI.jsx",
+        "AIIntelligenceDashboard.jsx",
+        "AdvancedAnalyticsDashboard.jsx",
+    ]
+
+    checks = {
+        "frontend directory exists": frontend.exists(),
+        "frontend/package.json exists": (frontend / "package.json").exists(),
+        "frontend/node_modules exists": (frontend / "node_modules").exists(),
+        "frontend/.env exists": (frontend / ".env").exists(),
+        "frontend/src/main.jsx exists": (frontend / "src" / "main.jsx").exists(),
+        "frontend/src/App.jsx exists": (frontend / "src" / "App.jsx").exists(),
+        "frontend/src/api/services.js exists": (frontend / "src" / "api" / "services.js").exists(),
+    }
+
     for component in components:
-        path = frontend_path / "src" / "components" / component
-        checks[f"  {component}"] = path.exists()
-    
-    # Check API services
-    checks["src/api/services.js"] = (frontend_path / "src" / "api" / "services.js").exists()
-    
-    passed = 0
-    for check, status in checks.items():
-        status_str = "✅" if status else "❌"
-        print(f"{status_str} {check}")
-        if status:
-            passed += 1
-    
-    print(f"\nFrontend: {passed}/{len(checks)} checks passed")
-    return all(checks.values())
+        checks[f"frontend/src/components/{component} exists"] = (
+            frontend / "src" / "components" / component
+        ).exists()
+
+    for page in pages:
+        checks[f"frontend/src/pages/{page} exists"] = (frontend / "src" / "pages" / page).exists()
+
+    optional = {"frontend/.env exists"}
+    return run_checks("FRONTEND VERIFICATION", checks, allow_warnings=optional)
+
 
 def check_documentation():
-    """Check documentation"""
-    print("\n📚 DOCUMENTATION VERIFICATION")
-    print("=" * 50)
-    
-    docs = [
-        "README.md",
-        "AI_ENHANCEMENT_IMPLEMENTATION_PLAN.md",
-        "IMPLEMENTATION_PROGRESS.md",
-        "STARTUP_GUIDE.md",
-    ]
-    
-    checks = {}
-    for doc in docs:
-        path = Path(doc)
-        checks[doc] = path.exists()
-    
-    passed = 0
-    for check, status in checks.items():
-        status_str = "✅" if status else "⚠️"
-        print(f"{status_str} {check}")
-        if status:
-            passed += 1
-    
-    print(f"\nDocumentation: {passed}/{len(checks)} files found")
-    return True  # Not critical
+    checks = {
+        "README.md exists": Path("README.md").exists(),
+        "backend/.env.example exists": Path("backend/.env.example").exists(),
+        "frontend/.env.example exists": Path("frontend/.env.example").exists(),
+    }
+    return run_checks("DOCUMENTATION VERIFICATION", checks)
+
 
 def check_ports():
-    """Check if required ports are available"""
-    print("\n🔌 PORT AVAILABILITY CHECK")
+    print("\nPORT AVAILABILITY CHECK")
     print("=" * 50)
-    
-    import socket
-    
-    ports_to_check = [
+
+    ports = [
         (8000, "Backend API"),
-        (5173, "Frontend Dev Server"),
+        (5173, "Frontend dev server"),
     ]
-    
     available = True
-    for port, name in ports_to_check:
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = sock.connect_ex(('localhost', port))
-            sock.close()
-            
-            if result == 0:
-                print(f"⚠️  Port {port} ({name}) is already in use")
-                available = False
-            else:
-                print(f"✅ Port {port} ({name}) is available")
-        except Exception as e:
-            print(f"⚠️  Could not check port {port}: {e}")
-    
-    if available:
-        print("\n✅ All ports are available")
-    else:
-        print("\n⚠️  Some ports are in use - you may need to use different ports")
-    
+
+    for port, name in ports:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            result = sock.connect_ex(("127.0.0.1", port))
+
+        if result == 0:
+            print_result(f"Port {port} ({name}) is already in use", False, warning=True)
+            available = False
+        else:
+            print_result(f"Port {port} ({name}) is available", True)
+
     return available
 
+
 def main():
-    """Run all checks"""
-    print("\n" + "=" * 50)
-    print("🚀 CAMPUSIQ - STARTUP VERIFICATION")
-    print("=" * 50)
-    
     os.chdir(Path(__file__).parent)
-    
+
+    print("\n" + "=" * 50)
+    print("CAMPUSIQ STARTUP VERIFICATION")
+    print("=" * 50)
+
     backend_ok = check_backend()
     frontend_ok = check_frontend()
     docs_ok = check_documentation()
     ports_ok = check_ports()
-    
-    print("\n" + "=" * 50)
-    print("📊 OVERALL STATUS")
+
+    print("\nOVERALL STATUS")
     print("=" * 50)
-    
-    all_ok = backend_ok and frontend_ok
-    
-    if all_ok:
-        print("""
-✅ ALL SYSTEMS GO! 🚀
 
-Your CampusIQ AI Intelligence Platform is ready to run!
-
-NEXT STEPS:
-1. Terminal 1 - Start Backend:
-   cd backend
-   python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-2. Terminal 2 - Start Frontend:
-   cd frontend
-   npm run dev
-
-3. Open in Browser:
-   - Frontend: http://localhost:5173
-   - API Docs: http://localhost:8000/api/docs
-
-COMPONENTS VERIFIED:
-✅ Backend API Services (5 AI services, 13 endpoints)
-✅ Frontend Components (7 sub-components)
-✅ Database (SQLite configured)
-✅ Dependencies (Python & npm)
-✅ Documentation (Complete guides)
-
-Happy coding! 🎉
-        """)
+    if backend_ok and frontend_ok and docs_ok:
+        print("[OK] Required project files are present.")
+        if not ports_ok:
+            print("[WARN] One or more dev ports are already in use. Stop the running service or use another port.")
+        print("\nNext steps:")
+        print("1. Start backend:  cd backend; python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000")
+        print("2. Start frontend: cd frontend; npm run dev")
+        print("3. Open app:       http://localhost:5173")
+        print("4. Open API docs:  http://127.0.0.1:8000/api/docs")
         return 0
-    else:
-        print("""
-❌ SETUP INCOMPLETE - ISSUES FOUND
 
-Please address the failed checks above and run this script again.
+    print("[MISSING] Setup is incomplete. Fix the missing items above, then run this script again.")
+    print("See README.md for setup instructions.")
+    return 1
 
-For help, see: STARTUP_GUIDE.md
-        """)
-        return 1
 
 if __name__ == "__main__":
     sys.exit(main())

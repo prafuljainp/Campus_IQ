@@ -7,7 +7,7 @@ $frontendNodeModules = Join-Path $repoRoot "frontend\node_modules"
 $env:ComSpec = Join-Path $env:WINDIR "System32\cmd.exe"
 
 if (!(Test-Path $backendPython)) {
-    throw "Backend virtual environment not found. Run the backend setup in DEVELOPMENT.md first."
+    throw "Backend virtual environment not found. Run the backend setup in README.md first."
 }
 
 if (!(Test-Path $frontendNodeModules)) {
