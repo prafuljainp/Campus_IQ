@@ -53,6 +53,7 @@ export default function App() {
         <Route path="notices" element={<NoticesPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="student-success" element={<StudentSuccessPage />} />
+        <Route path="training" element={<AptitudePage />} />
         <Route path="aptitude" element={<AptitudePage />} />
         <Route path="ranking" element={<RankingPage />} />
         <Route path="logs" element={<ActivityLogsPage />} />

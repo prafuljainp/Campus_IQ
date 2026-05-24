@@ -220,6 +220,168 @@ APTITUDE_QUESTIONS = [
         "correct_option": 2,
         "explanation": "1024 is 2^10, so binary search takes at most 10 comparisons in the ideal halving model.",
     },
+    {
+        "category": "Technical MCQ",
+        "topic": "OOP Concepts",
+        "difficulty": "easy",
+        "question_text": "Which OOP concept allows the same method name to behave differently for different object types?",
+        "options": ["Encapsulation", "Polymorphism", "Abstraction", "Compilation"],
+        "correct_option": 1,
+        "explanation": "Polymorphism lets the same interface or method call resolve to different behavior depending on the object.",
+    },
+    {
+        "category": "Technical MCQ",
+        "topic": "Operating Systems",
+        "difficulty": "medium",
+        "question_text": "Which condition is necessary for a deadlock to occur?",
+        "options": ["Preemption only", "Mutual exclusion", "Single process execution", "No resource sharing"],
+        "correct_option": 1,
+        "explanation": "Mutual exclusion is one of the Coffman conditions required for deadlock.",
+    },
+    {
+        "category": "Technical MCQ",
+        "topic": "Computer Networks",
+        "difficulty": "medium",
+        "question_text": "Which transport protocol provides reliable, ordered delivery of data?",
+        "options": ["UDP", "TCP", "IP", "ICMP"],
+        "correct_option": 1,
+        "explanation": "TCP provides reliability, ordering, retransmission, and flow control.",
+    },
+    {
+        "category": "Technical MCQ",
+        "topic": "Database Normalization",
+        "difficulty": "medium",
+        "question_text": "Which normal form removes partial dependency on a composite primary key?",
+        "options": ["1NF", "2NF", "3NF", "BCNF"],
+        "correct_option": 1,
+        "explanation": "2NF removes partial dependencies where non-key attributes depend on only part of a composite key.",
+    },
+    {
+        "category": "Technical MCQ",
+        "topic": "Complexity",
+        "difficulty": "easy",
+        "question_text": "What is the time complexity of accessing an element by index in an array?",
+        "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+        "correct_option": 0,
+        "explanation": "Array index access is constant time because the address can be computed directly.",
+    },
+    {
+        "category": "Coding Logic",
+        "topic": "Python References",
+        "difficulty": "medium",
+        "question_text": "In Python, x = [1, 2, 3]; y = x; y.append(4). What is len(x)?",
+        "options": ["3", "4", "0", "Raises an error"],
+        "correct_option": 1,
+        "explanation": "Both variables reference the same list, so appending through y also changes x.",
+    },
+    {
+        "category": "Coding Logic",
+        "topic": "Loop Tracing",
+        "difficulty": "easy",
+        "question_text": "If sum starts at 0 and a loop adds i for i = 0, 1, 2, what is the final sum?",
+        "options": ["2", "3", "4", "6"],
+        "correct_option": 1,
+        "explanation": "The loop adds 0 + 1 + 2, which equals 3.",
+    },
+    {
+        "category": "Coding Logic",
+        "topic": "Recursion",
+        "difficulty": "medium",
+        "question_text": "What is the main purpose of a base case in recursion?",
+        "options": ["To sort data", "To stop recursive calls", "To allocate memory", "To increase loop speed"],
+        "correct_option": 1,
+        "explanation": "A base case stops recursion and prevents infinite calls.",
+    },
+    {
+        "category": "Coding Logic",
+        "topic": "Arrays",
+        "difficulty": "medium",
+        "question_text": "For an array of length n, what is the last valid index in zero-based indexing?",
+        "options": ["n", "n + 1", "n - 1", "1"],
+        "correct_option": 2,
+        "explanation": "Zero-based arrays start at index 0, so the last index is n - 1.",
+    },
+    {
+        "category": "Coding Logic",
+        "topic": "Conditionals",
+        "difficulty": "easy",
+        "question_text": "Which branch runs when if (score >= 60) is evaluated with score = 60?",
+        "options": ["The true branch", "The false branch", "Both branches", "Neither branch"],
+        "correct_option": 0,
+        "explanation": "The condition includes equality, so 60 satisfies score >= 60.",
+    },
+    {
+        "category": "Debugging",
+        "topic": "Off-by-One Errors",
+        "difficulty": "medium",
+        "question_text": "A loop should process indexes 0 to 4. Which condition is correct for i starting at 0?",
+        "options": ["i <= 4", "i < 4", "i <= 5", "i == 4"],
+        "correct_option": 0,
+        "explanation": "Indexes 0, 1, 2, 3, and 4 are processed when the condition is i <= 4.",
+    },
+    {
+        "category": "Debugging",
+        "topic": "Null Checks",
+        "difficulty": "easy",
+        "question_text": "What is the safest first step before accessing user.profile.name when user may be null?",
+        "options": ["Convert name to uppercase", "Check that user and profile exist", "Delete the profile", "Use a larger variable name"],
+        "correct_option": 1,
+        "explanation": "Checking nested values prevents null reference errors.",
+    },
+    {
+        "category": "Debugging",
+        "topic": "Boundary Conditions",
+        "difficulty": "medium",
+        "question_text": "Which input is best for testing a function that handles an empty list?",
+        "options": ["A list with 100 items", "A sorted list", "[]", "A list with duplicate items only"],
+        "correct_option": 2,
+        "explanation": "An empty list directly tests the boundary condition the function claims to handle.",
+    },
+    {
+        "category": "Debugging",
+        "topic": "Test Cases",
+        "difficulty": "medium",
+        "question_text": "A function fails only when input is 0. What type of case is 0 often considered?",
+        "options": ["Random case", "Boundary case", "Duplicate case", "Network case"],
+        "correct_option": 1,
+        "explanation": "Zero is commonly a boundary case for numeric logic.",
+    },
+    {
+        "category": "SQL Practice",
+        "topic": "SQL Aggregation",
+        "difficulty": "easy",
+        "question_text": "Which SQL function returns the number of rows in a group?",
+        "options": ["SUM()", "COUNT()", "AVG()", "MAX()"],
+        "correct_option": 1,
+        "explanation": "COUNT() returns the number of rows or non-null values, depending on usage.",
+    },
+    {
+        "category": "SQL Practice",
+        "topic": "SQL Joins",
+        "difficulty": "medium",
+        "question_text": "Which join returns all rows from the left table and matching rows from the right table?",
+        "options": ["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "CROSS JOIN"],
+        "correct_option": 1,
+        "explanation": "LEFT JOIN keeps all rows from the left table and fills unmatched right-side values with null.",
+    },
+    {
+        "category": "SQL Practice",
+        "topic": "SQL Filtering",
+        "difficulty": "easy",
+        "question_text": "Which clause filters rows before grouping?",
+        "options": ["WHERE", "HAVING", "ORDER BY", "GROUP BY"],
+        "correct_option": 0,
+        "explanation": "WHERE filters individual rows before GROUP BY is applied.",
+    },
+    {
+        "category": "SQL Practice",
+        "topic": "SQL Ranking",
+        "difficulty": "hard",
+        "question_text": "Which window function assigns the same rank to ties and skips the next rank?",
+        "options": ["ROW_NUMBER()", "RANK()", "DENSE_RANK()", "COUNT()"],
+        "correct_option": 1,
+        "explanation": "RANK() gives tied rows the same rank and leaves gaps after ties.",
+    },
 ]
 
 APTITUDE_TESTS = [
@@ -247,24 +409,59 @@ APTITUDE_TESTS = [
         "duration_minutes": 16,
         "topics": ["Coding-Decoding", "Directions", "Syllogisms", "Seating Arrangement", "Grammar", "Antonyms", "Sentence Correction", "Reading Comprehension"],
     },
+    {
+        "title": "Technical MCQ Foundations",
+        "description": "Core CS fundamentals across OOP, OS, networking, DBMS, and complexity.",
+        "category": "Technical MCQ",
+        "difficulty": "medium",
+        "duration_minutes": 18,
+        "topics": ["OOP Concepts", "Operating Systems", "Computer Networks", "Database Normalization", "Complexity", "Data Structures", "Algorithms"],
+    },
+    {
+        "title": "Coding Logic Output Drill",
+        "description": "Output prediction and logic tracing questions for coding screening rounds.",
+        "category": "Coding Logic",
+        "difficulty": "medium",
+        "duration_minutes": 16,
+        "topics": ["Python References", "Loop Tracing", "Recursion", "Arrays", "Conditionals", "Programming Logic"],
+    },
+    {
+        "title": "Debugging Interview Practice",
+        "description": "Bug finding, edge cases, and defensive coding practice.",
+        "category": "Debugging",
+        "difficulty": "medium",
+        "duration_minutes": 14,
+        "topics": ["Off-by-One Errors", "Null Checks", "Boundary Conditions", "Test Cases"],
+    },
+    {
+        "title": "SQL Practice Screening",
+        "description": "SQL joins, filtering, aggregation, and ranking questions for technical rounds.",
+        "category": "SQL Practice",
+        "difficulty": "medium",
+        "duration_minutes": 14,
+        "topics": ["SQL Aggregation", "SQL Joins", "SQL Filtering", "SQL Ranking", "Databases"],
+    },
 ]
 
 
 def seed_aptitude_data(db: Session):
-    """Seed aptitude questions/tests independently of the main demo data."""
-    if db.query(AptitudeQuestion).count() == 0:
-        question_objs = []
-        for item in APTITUDE_QUESTIONS:
+    """Seed placement training questions/tests independently of the main demo data."""
+    existing_questions = {
+        question.question_text: question
+        for question in db.query(AptitudeQuestion).all()
+    }
+    for item in APTITUDE_QUESTIONS:
+        if item["question_text"] not in existing_questions:
             question = AptitudeQuestion(**item)
             db.add(question)
-            question_objs.append(question)
-        db.flush()
-    else:
-        question_objs = db.query(AptitudeQuestion).filter(AptitudeQuestion.is_active == True).all()
+            existing_questions[item["question_text"]] = question
+    db.flush()
 
-    if db.query(AptitudeTest).count() > 0:
-        db.commit()
-        return
+    question_objs = db.query(AptitudeQuestion).filter(AptitudeQuestion.is_active == True).all()
+    existing_test_titles = {
+        test.title
+        for test in db.query(AptitudeTest).all()
+    }
 
     questions_by_topic = {}
     for question in question_objs:
@@ -272,6 +469,9 @@ def seed_aptitude_data(db: Session):
 
     admin_user = db.query(User).filter(User.role == "super_admin").first()
     for item in APTITUDE_TESTS:
+        if item["title"] in existing_test_titles:
+            continue
+
         test = AptitudeTest(
             title=item["title"],
             description=item["description"],

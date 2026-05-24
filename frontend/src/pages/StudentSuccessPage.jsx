@@ -63,6 +63,24 @@ function MetricBar({ label, value, color = 'bg-blue-500' }) {
   )
 }
 
+function formatSigned(value) {
+  const number = Number(value || 0)
+  return `${number > 0 ? '+' : ''}${number}`
+}
+
+function scoreText(value) {
+  return `${Math.round(Number(value || 0))}%`
+}
+
+function deltaTone(value, lowerIsBetter = false) {
+  const number = Number(value || 0)
+  const improved = lowerIsBetter ? number < 0 : number > 0
+  if (number === 0) return 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+  return improved
+    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+}
+
 export default function StudentSuccessPage() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -119,6 +137,7 @@ export default function StudentSuccessPage() {
   const interventionBoard = data?.intervention_board || []
 
   const selectedName = selectedProfile?.student?.name
+  const selectedMetrics = selectedProfile?.metrics || {}
 
   const scenarioPayload = useMemo(() => {
     const clean = {}
@@ -371,10 +390,44 @@ export default function StudentSuccessPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <div className="card p-6">
-          <SectionTitle icon={Target} title={`What-If Simulator${selectedName ? `: ${selectedName}` : ''}`} />
+          <SectionTitle
+            icon={Target}
+            title="Plan Simulator"
+            action={selectedName && <span className="badge-blue">{selectedName}</span>}
+          />
+
+          <div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 p-4 mb-4">
+            <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">Try a target plan before assigning support.</p>
+            <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+              Enter the values the student should reach. Blank fields keep the current profile value.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-700/40 p-3">
+              <p className="text-xs text-slate-400">Current CGPA</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">{selectedMetrics.cgpa ?? '-'}</p>
+            </div>
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-700/40 p-3">
+              <p className="text-xs text-slate-400">Attendance</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">{selectedMetrics.attendance_percentage ?? '-'}%</p>
+            </div>
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-700/40 p-3">
+              <p className="text-xs text-slate-400">Skills</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">{selectedMetrics.skills_count ?? '-'}</p>
+            </div>
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-700/40 p-3">
+              <p className="text-xs text-slate-400">Internships</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">{selectedMetrics.internships_count ?? '-'}</p>
+            </div>
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-700/40 p-3">
+              <p className="text-xs text-slate-400">Backlogs</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">{selectedMetrics.backlogs ?? '-'}</p>
+            </div>
+          </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <label>
-              <span className="label">CGPA</span>
+              <span className="label">Target CGPA</span>
               <input
                 className="input"
                 type="number"
@@ -383,11 +436,12 @@ export default function StudentSuccessPage() {
                 step="0.1"
                 value={scenario.cgpa}
                 onChange={e => setScenario({ ...scenario, cgpa: e.target.value })}
-                placeholder="8.2"
+                placeholder={String(selectedMetrics.cgpa ?? '8.2')}
               />
+              <p className="text-[11px] text-slate-400 mt-1">Current: {selectedMetrics.cgpa ?? '-'}</p>
             </label>
             <label>
-              <span className="label">Attendance %</span>
+              <span className="label">Target Attendance</span>
               <input
                 className="input"
                 type="number"
@@ -395,11 +449,12 @@ export default function StudentSuccessPage() {
                 max="100"
                 value={scenario.attendance_percentage}
                 onChange={e => setScenario({ ...scenario, attendance_percentage: e.target.value })}
-                placeholder="85"
+                placeholder={String(selectedMetrics.attendance_percentage ?? '85')}
               />
+              <p className="text-[11px] text-slate-400 mt-1">Current: {selectedMetrics.attendance_percentage ?? '-'}%</p>
             </label>
             <label>
-              <span className="label">Skills</span>
+              <span className="label">Target Skills</span>
               <input
                 className="input"
                 type="number"
@@ -407,11 +462,12 @@ export default function StudentSuccessPage() {
                 max="50"
                 value={scenario.skills_count}
                 onChange={e => setScenario({ ...scenario, skills_count: e.target.value })}
-                placeholder="10"
+                placeholder={String(selectedMetrics.skills_count ?? '10')}
               />
+              <p className="text-[11px] text-slate-400 mt-1">Current: {selectedMetrics.skills_count ?? '-'}</p>
             </label>
             <label>
-              <span className="label">Internships</span>
+              <span className="label">Target Internships</span>
               <input
                 className="input"
                 type="number"
@@ -419,8 +475,9 @@ export default function StudentSuccessPage() {
                 max="20"
                 value={scenario.internships_count}
                 onChange={e => setScenario({ ...scenario, internships_count: e.target.value })}
-                placeholder="1"
+                placeholder={String(selectedMetrics.internships_count ?? '1')}
               />
+              <p className="text-[11px] text-slate-400 mt-1">Current: {selectedMetrics.internships_count ?? '-'}</p>
             </label>
           </div>
           <div className="flex items-center justify-between flex-wrap gap-3 mt-4">
@@ -431,7 +488,8 @@ export default function StudentSuccessPage() {
                 onChange={e => setScenario({ ...scenario, clear_backlogs: e.target.checked })}
                 className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
               />
-              Clear active backlogs
+              Set active backlogs to 0
+              <span className="text-xs text-slate-400">Current: {selectedMetrics.backlogs ?? 0}</span>
             </label>
             <div className="flex items-center gap-2">
               <button
@@ -451,25 +509,78 @@ export default function StudentSuccessPage() {
           </div>
 
           {simulation && (
-            <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-4">
-                <p className="text-xs text-emerald-700 dark:text-emerald-300">Health Change</p>
-                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-                  {simulation.impact.health_delta > 0 ? '+' : ''}{simulation.impact.health_delta}
-                </p>
+            <div className="mt-5 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="rounded-xl border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-900/20 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">Success Score</p>
+                    <span className={`rounded-full px-2 py-1 text-xs font-bold ${deltaTone(simulation.impact.health_delta)}`}>
+                      {formatSigned(simulation.impact.health_delta)}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-end gap-2">
+                    <p className="text-xl font-bold text-slate-500 line-through decoration-slate-300">{scoreText(simulation.current.health_score)}</p>
+                    <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">{scoreText(simulation.simulated.health_score)}</p>
+                  </div>
+                  <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-2">Higher is better.</p>
+                </div>
+
+                <div className="rounded-xl border border-blue-100 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">Placement Readiness</p>
+                    <span className={`rounded-full px-2 py-1 text-xs font-bold ${deltaTone(simulation.impact.placement_delta)}`}>
+                      {formatSigned(simulation.impact.placement_delta)}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-end gap-2">
+                    <p className="text-xl font-bold text-slate-500 line-through decoration-slate-300">{scoreText(simulation.current.placement_readiness)}</p>
+                    <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">{scoreText(simulation.simulated.placement_readiness)}</p>
+                  </div>
+                  <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">Higher is better.</p>
+                </div>
+
+                <div className="rounded-xl border border-red-100 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-red-800 dark:text-red-200">Risk Score</p>
+                    <span className={`rounded-full px-2 py-1 text-xs font-bold ${deltaTone(simulation.impact.risk_delta, true)}`}>
+                      {formatSigned(simulation.impact.risk_delta)}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-end gap-2">
+                    <p className="text-xl font-bold text-slate-500 line-through decoration-slate-300">{scoreText(simulation.current.risk_score)}</p>
+                    <p className="text-3xl font-bold text-red-700 dark:text-red-300">{scoreText(simulation.simulated.risk_score)}</p>
+                  </div>
+                  <p className="text-xs text-red-700 dark:text-red-300 mt-2">Lower is better.</p>
+                </div>
               </div>
-              <div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-4">
-                <p className="text-xs text-blue-700 dark:text-blue-300">Placement Change</p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                  {simulation.impact.placement_delta > 0 ? '+' : ''}{simulation.impact.placement_delta}
-                </p>
+
+              <div className="rounded-xl border border-slate-100 dark:border-slate-700 p-4">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Scenario applied</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {Object.entries(simulation.scenario || {}).map(([key, value]) => (
+                    <span key={key} className="rounded-full bg-slate-100 dark:bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                      {key.replaceAll('_', ' ')}: {String(value)}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="rounded-xl bg-red-50 dark:bg-red-900/20 p-4">
-                <p className="text-xs text-red-700 dark:text-red-300">Risk Change</p>
-                <p className="text-2xl font-bold text-red-700 dark:text-red-300">
-                  {simulation.impact.risk_delta > 0 ? '+' : ''}{simulation.impact.risk_delta}
-                </p>
-              </div>
+
+              {simulation.next_best_actions?.length > 0 && (
+                <div className="rounded-xl border border-slate-100 dark:border-slate-700 p-4">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">Recommended follow-up</p>
+                  <div className="mt-3 space-y-2">
+                    {simulation.next_best_actions.map((action) => (
+                      <div key={`${action.priority}-${action.title}`} className="rounded-lg bg-slate-50 dark:bg-slate-700/40 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{action.title}</p>
+                          <span className="text-xs text-slate-400">{action.timeline}</span>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{action.details}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

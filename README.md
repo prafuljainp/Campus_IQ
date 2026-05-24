@@ -2,7 +2,7 @@
 
 CampusIQ is a full-stack college ERP and placement intelligence platform for managing academics, placements, student performance, and interview preparation from one role-based portal.
 
-The system includes a FastAPI backend, a React/Vite frontend, JWT authentication, seeded demo data, analytics dashboards, AI-assisted student insights, and an aptitude preparation module for campus interview readiness.
+The system includes a FastAPI backend, a React/Vite frontend, JWT authentication, seeded demo data, analytics dashboards, AI-assisted student insights, and a placement training module for campus interview readiness.
 
 ## Highlights
 
@@ -11,7 +11,7 @@ The system includes a FastAPI backend, a React/Vite frontend, JWT authentication
 - Academic analytics, placement analytics, student success insights, and activity logs
 - AI-assisted analysis for placement readiness, skill gaps, recommendations, and student health scores
 - Job portal, notifications, alumni/mentor, and enterprise-oriented modules
-- Aptitude preparation with timed tests, scoring, explanations, topic analysis, and staff-managed question banks
+- Placement training with timed aptitude, technical MCQ, coding logic, debugging, SQL, verbal, and reasoning tests
 - Local development setup using SQLite, FastAPI, Vite, and seeded demo users
 
 ## Tech Stack
@@ -80,7 +80,7 @@ Placement and intelligence:
 - Placement readiness and recommendations
 - Advanced analytics dashboards
 
-Aptitude preparation:
+Placement training:
 - Student test dashboard
 - Timed practice tests
 - Attempt submission and scoring
@@ -89,6 +89,7 @@ Aptitude preparation:
 - Staff question bank management
 - Test publishing/unpublishing
 - Attempt analytics for staff
+- Seeded tracks for quantitative aptitude, reasoning, verbal ability, technical MCQ, coding logic, debugging, and SQL practice
 
 ## Requirements
 
@@ -198,21 +199,31 @@ Common backend route groups:
 
 Use the generated docs at `http://127.0.0.1:8000/api/docs` for the complete request and response shapes.
 
-## Aptitude Module Flow
+## Placement Training Flow
 
 Student flow:
-1. Open Aptitude Prep from the sidebar.
-2. Select an available published test.
-3. Attend the timed test.
-4. Submit answers.
-5. Review score, accuracy, correct answers, explanations, and topic performance.
+1. Open Training Tests from the sidebar.
+2. Choose a track such as Technical MCQ, Coding Logic, Debugging, SQL Practice, Quantitative Aptitude, Reasoning, or Verbal Ability.
+3. Select an available published test.
+4. Attend the timed test.
+5. Submit answers.
+6. Review score, accuracy, correct answers, explanations, and topic performance.
 
 Staff flow:
-1. Add aptitude questions with options, answer keys, topic, difficulty, and explanations.
+1. Add training questions with options, answer keys, category, topic, difficulty, and explanations.
 2. Create tests from the question bank.
 3. Publish tests when ready for students.
 4. Review attempt analytics and weak-topic trends.
 5. Update, unpublish, or archive content as needed.
+
+Current seeded training tests include:
+- Placement Aptitude Starter Mock
+- Quantitative Aptitude Sprint
+- Reasoning and Verbal Interview Drill
+- Technical MCQ Foundations
+- Coding Logic Output Drill
+- Debugging Interview Practice
+- SQL Practice Screening
 
 ## Verification
 

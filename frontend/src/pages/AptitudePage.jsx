@@ -10,8 +10,20 @@ import { EmptyState, PageLoader } from '../components/UI'
 import useAuthStore from '../context/authStore'
 
 const allCategory = 'All'
+const trainingCategories = [
+  'Technical MCQ',
+  'Coding Logic',
+  'Debugging',
+  'SQL Practice',
+  'Quantitative Aptitude',
+  'Logical Reasoning',
+  'Verbal Ability',
+  'Reasoning and Verbal',
+  'Mixed Aptitude',
+  'Technical Aptitude',
+]
 const defaultQuestionForm = {
-  category: 'Quantitative Aptitude',
+  category: 'Technical MCQ',
   topic: '',
   difficulty: 'medium',
   question_text: '',
@@ -22,7 +34,7 @@ const defaultQuestionForm = {
 const defaultTestForm = {
   title: '',
   description: '',
-  category: 'Mixed Aptitude',
+  category: 'Technical MCQ',
   difficulty: 'medium',
   duration_minutes: 20,
   question_ids: [],
@@ -124,6 +136,8 @@ function StaffAptitudePage() {
   const [editingTestId, setEditingTestId] = useState(null)
   const [savingQuestion, setSavingQuestion] = useState(false)
   const [savingTest, setSavingTest] = useState(false)
+  const [questionSearch, setQuestionSearch] = useState('')
+  const [questionCategoryFilter, setQuestionCategoryFilter] = useState(allCategory)
 
   const loadStaffData = async () => {
     setLoading(true)
@@ -135,7 +149,7 @@ function StaffAptitudePage() {
       setData(dashboardRes.data)
       setQuestions(questionsRes.data || [])
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Unable to load aptitude management data')
+      toast.error(error.response?.data?.detail || 'Unable to load training management data')
     } finally {
       setLoading(false)
     }
@@ -174,7 +188,7 @@ function StaffAptitudePage() {
   const startQuestionEdit = (question) => {
     setEditingQuestionId(question.id)
     setQuestionForm({
-      category: question.category || 'Quantitative Aptitude',
+      category: question.category || 'Technical MCQ',
       topic: question.topic || '',
       difficulty: question.difficulty || 'medium',
       question_text: question.question_text || '',
@@ -189,7 +203,7 @@ function StaffAptitudePage() {
     setTestForm({
       title: test.title || '',
       description: test.description || '',
-      category: test.category || 'Mixed Aptitude',
+      category: test.category || 'Technical MCQ',
       difficulty: test.difficulty || 'medium',
       duration_minutes: test.duration_minutes || 20,
       is_published: test.is_published,
@@ -304,6 +318,19 @@ function StaffAptitudePage() {
     }
   }
 
+  const questionCategories = useMemo(() => {
+    const values = Array.from(new Set(questions.map(question => question.category))).filter(Boolean)
+    return [allCategory, ...values]
+  }, [questions])
+  const visibleQuestions = useMemo(() => {
+    const search = questionSearch.trim().toLowerCase()
+    return questions.filter(question => {
+      const matchesCategory = questionCategoryFilter === allCategory || question.category === questionCategoryFilter
+      const haystack = `${question.question_text} ${question.category} ${question.topic}`.toLowerCase()
+      return matchesCategory && (!search || haystack.includes(search))
+    })
+  }, [questions, questionCategoryFilter, questionSearch])
+
   if (loading && !data) return <PageLoader />
 
   const summary = data?.summary || {}
@@ -317,8 +344,8 @@ function StaffAptitudePage() {
         <div className="flex items-start gap-3">
           <ClipboardList className="text-blue-600 mt-1 flex-shrink-0" size={32} />
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white leading-tight">Aptitude Management</h1>
-            <p className="text-slate-500 mt-1">Build interview practice tests and track student readiness</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white leading-tight">Placement Training Management</h1>
+            <p className="text-slate-500 mt-1">Build aptitude, technical, coding, SQL and debugging practice tests</p>
           </div>
         </div>
         <button className="btn-secondary" onClick={loadStaffData} disabled={loading}>
@@ -356,10 +383,9 @@ function StaffAptitudePage() {
                   value={questionForm.category}
                   onChange={e => setQuestionForm({ ...questionForm, category: e.target.value })}
                 >
-                  <option>Quantitative Aptitude</option>
-                  <option>Logical Reasoning</option>
-                  <option>Verbal Ability</option>
-                  <option>Technical Aptitude</option>
+                  {trainingCategories.map(category => (
+                    <option key={category}>{category}</option>
+                  ))}
                 </select>
               </label>
               <label className="md:col-span-2">
@@ -368,7 +394,7 @@ function StaffAptitudePage() {
                   className="input"
                   value={questionForm.topic}
                   onChange={e => setQuestionForm({ ...questionForm, topic: e.target.value })}
-                  placeholder="Time and Work"
+                  placeholder="OOP Concepts"
                 />
               </label>
               <label>
@@ -391,7 +417,7 @@ function StaffAptitudePage() {
                 className="input min-h-24 resize-y"
                 value={questionForm.question_text}
                 onChange={e => setQuestionForm({ ...questionForm, question_text: e.target.value })}
-                placeholder="Enter the aptitude question..."
+                placeholder="Enter a technical, coding, SQL, aptitude, or reasoning question..."
               />
             </label>
 
@@ -459,17 +485,20 @@ function StaffAptitudePage() {
                   className="input"
                   value={testForm.title}
                   onChange={e => setTestForm({ ...testForm, title: e.target.value })}
-                  placeholder="Company Mock Test 1"
+                  placeholder="Technical Screening Mock 1"
                 />
               </label>
               <label>
                 <span className="label">Category</span>
-                <input
+                <select
                   className="input"
                   value={testForm.category}
                   onChange={e => setTestForm({ ...testForm, category: e.target.value })}
-                  placeholder="Mixed Aptitude"
-                />
+                >
+                  {trainingCategories.map(category => (
+                    <option key={category}>{category}</option>
+                  ))}
+                </select>
               </label>
               <label>
                 <span className="label">Duration</span>
@@ -512,8 +541,25 @@ function StaffAptitudePage() {
                 <span className="label mb-0">Questions</span>
                 <span className="text-xs font-semibold text-slate-400">{testForm.question_ids.length} selected</span>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-2 mb-3">
+                <select
+                  className="input"
+                  value={questionCategoryFilter}
+                  onChange={e => setQuestionCategoryFilter(e.target.value)}
+                >
+                  {questionCategories.map(category => (
+                    <option key={category}>{category}</option>
+                  ))}
+                </select>
+                <input
+                  className="input"
+                  value={questionSearch}
+                  onChange={e => setQuestionSearch(e.target.value)}
+                  placeholder="Search question bank"
+                />
+              </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
-                {questions.map(question => (
+                {visibleQuestions.map(question => (
                   <label
                     key={question.id}
                     className="rounded-xl border border-slate-200 dark:border-slate-700 p-3 flex items-start gap-3 cursor-pointer hover:border-blue-300"
@@ -577,9 +623,9 @@ function StaffAptitudePage() {
           <div className="card p-5">
             <SectionTitle icon={FileQuestion} title="Question Bank" />
             <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-              {questions.length === 0 ? (
+              {visibleQuestions.length === 0 ? (
                 <p className="text-sm text-slate-400 py-8 text-center">No active questions yet</p>
-              ) : questions.map(question => (
+              ) : visibleQuestions.map(question => (
                 <div key={question.id} className="rounded-xl border border-slate-100 dark:border-slate-700 p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -662,7 +708,7 @@ function StudentAptitudePage() {
       const res = await aptitudeAPI.dashboard()
       setDashboard(res.data)
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Unable to load aptitude tests')
+      toast.error(error.response?.data?.detail || 'Unable to load placement training tests')
     } finally {
       setLoading(false)
     }
@@ -983,8 +1029,8 @@ function StudentAptitudePage() {
   if (!tests.length) {
     return (
       <EmptyState
-        title="No aptitude tests available"
-        description="Published aptitude tests will appear here for students."
+        title="No placement training tests available"
+        description="Published aptitude, technical, coding, and SQL tests will appear here for students."
       />
     )
   }
@@ -995,8 +1041,8 @@ function StudentAptitudePage() {
         <div className="flex items-start gap-3">
           <ClipboardList className="text-blue-600 mt-1 flex-shrink-0" size={32} />
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white leading-tight">Aptitude Prep</h1>
-            <p className="text-slate-500 mt-1">Timed practice for campus interview rounds</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white leading-tight">Placement Training</h1>
+            <p className="text-slate-500 mt-1">Timed aptitude, technical, coding and SQL practice for campus rounds</p>
           </div>
         </div>
         <button className="btn-secondary" onClick={loadDashboard} disabled={loading}>
@@ -1031,7 +1077,7 @@ function StudentAptitudePage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-5">
         <div className="space-y-4">
-          <SectionTitle icon={ClipboardList} title="Available Tests" />
+          <SectionTitle icon={ClipboardList} title="Training Tests" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {filteredTests.map(test => {
               const last = test.last_attempt

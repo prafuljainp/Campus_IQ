@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   { to: '/faculty', icon: GraduationCap, label: 'Faculty', roles: ['super_admin', 'hod'] },
   { to: '/departments', icon: Building2, label: 'Departments', roles: ['super_admin'] },
   { to: '/placements', icon: Briefcase, label: 'Placements', roles: ['super_admin', 'hod', 'faculty', 'student'] },
-  { to: '/aptitude', icon: ClipboardList, label: 'Aptitude Prep', roles: ['super_admin', 'hod', 'faculty', 'student'] },
+  { to: '/training', icon: ClipboardList, label: 'Training Tests', roles: ['super_admin', 'hod', 'faculty', 'student'] },
   { to: '/attendance', icon: ClipboardCheck, label: 'Attendance', roles: ['super_admin', 'hod', 'faculty', 'student'] },
   { to: '/marks', icon: BookOpen, label: 'Marks & Grades', roles: ['super_admin', 'hod', 'faculty', 'student'] },
   { to: '/ranking', icon: Trophy, label: 'Rankings', roles: ['super_admin', 'hod', 'faculty', 'student'] },
