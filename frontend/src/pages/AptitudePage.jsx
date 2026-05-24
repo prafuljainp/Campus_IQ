@@ -695,6 +695,7 @@ function StudentAptitudePage() {
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState(allCategory)
   const [startingId, setStartingId] = useState(null)
+  const [practiceStarting, setPracticeStarting] = useState(false)
   const [activeAttempt, setActiveAttempt] = useState(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState({})
@@ -732,6 +733,9 @@ function StudentAptitudePage() {
   const summary = dashboard?.summary || {}
   const recentAttempts = dashboard?.recent_attempts || []
   const topicPerformance = dashboard?.topic_performance || []
+  const focusPractice = dashboard?.focus_practice || {}
+  const weakTopics = focusPractice.weak_topics || []
+  const latestPractice = focusPractice.latest_practice
 
   const categories = useMemo(() => {
     const values = Array.from(new Set(tests.map(test => test.category))).filter(Boolean)
@@ -763,23 +767,66 @@ function StudentAptitudePage() {
     }
   }
 
+  const startFocusPractice = async (topics = []) => {
+    setPracticeStarting(true)
+    try {
+      const payload = {
+        topics: topics.length ? topics : weakTopics.slice(0, 3).map(item => item.topic),
+        question_count: 5,
+      }
+      const res = await aptitudeAPI.startPractice(payload)
+      setActiveAttempt({
+        ...res.data,
+        mode: 'practice',
+        attempt_id: res.data.id,
+        test: {
+          title: 'Focus Practice',
+          category: (res.data.topics || []).join(', '),
+          difficulty: 'practice',
+          duration_minutes: 10,
+          question_count: res.data.questions?.length || 0,
+        },
+      })
+      setAnswers({})
+      setCurrentIndex(0)
+      setResult(null)
+      setTimeLeft(10 * 60)
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Unable to start focus practice')
+    } finally {
+      setPracticeStarting(false)
+    }
+  }
+
   const submitAttempt = async (autoSubmit = false) => {
     if (!activeAttempt || submitting) return
     setSubmitting(true)
     try {
       const payload = {
-        duration_seconds: Math.max(0, (activeAttempt.test.duration_minutes * 60) - timeLeft),
+        duration_seconds: Math.max(0, ((activeAttempt.test?.duration_minutes || 10) * 60) - timeLeft),
         answers: activeQuestions.map(question => ({
           question_id: question.id,
           selected_option: answers[question.id] ?? null,
           time_spent_seconds: 0,
         })),
       }
-      const res = await aptitudeAPI.submitAttempt(activeAttempt.attempt_id, payload)
-      setResult(res.data)
+      const res = activeAttempt.mode === 'practice'
+        ? await aptitudeAPI.submitPractice(activeAttempt.attempt_id, payload)
+        : await aptitudeAPI.submitAttempt(activeAttempt.attempt_id, payload)
+      setResult(activeAttempt.mode === 'practice'
+        ? {
+            ...res.data,
+            test: {
+              title: 'Focus Practice',
+              category: (res.data.topics || []).join(', '),
+              difficulty: 'practice',
+              duration_minutes: 10,
+            },
+          }
+        : res.data)
       setActiveAttempt(null)
       await loadDashboard()
-      toast.success(autoSubmit ? 'Time is up. Test submitted.' : 'Test submitted')
+      toast.success(autoSubmit ? 'Time is up. Submitted.' : activeAttempt.mode === 'practice' ? 'Practice submitted' : 'Test submitted')
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Unable to submit test')
     } finally {
@@ -1123,6 +1170,50 @@ function StudentAptitudePage() {
         </div>
 
         <div className="space-y-4">
+          <div className="card p-5">
+            <SectionTitle
+              icon={Target}
+              title="Focus Practice"
+              action={latestPractice && (
+                <span className={scoreClass(latestPractice.score)}>{Math.round(latestPractice.score)}%</span>
+              )}
+            />
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              {weakTopics.length
+                ? 'Practice the topics where your last attempts need the most improvement.'
+                : 'Start with a short mixed practice. Weak topics will appear after you submit tests.'}
+            </p>
+            <div className="space-y-2">
+              {weakTopics.slice(0, 3).map(topic => (
+                <div key={topic.topic} className="rounded-xl bg-slate-50 dark:bg-slate-700/40 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{topic.topic}</p>
+                      <p className="text-xs text-slate-400">{topic.correct}/{topic.total} correct in tests</p>
+                    </div>
+                    <span className="text-sm font-bold text-amber-600 dark:text-amber-300">{Math.round(topic.accuracy)}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {latestPractice && (
+              <div className="mt-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3">
+                <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Last practice</p>
+                <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                  {latestPractice.correct_answers}/{latestPractice.total_questions} correct across {(latestPractice.topics || []).join(', ')}
+                </p>
+              </div>
+            )}
+            <button
+              className="btn-primary w-full mt-4"
+              onClick={() => startFocusPractice()}
+              disabled={practiceStarting}
+            >
+              <PlayCircle size={15} />
+              {practiceStarting ? 'Starting...' : 'Start 5-Question Practice'}
+            </button>
+          </div>
+
           <div className="card p-5">
             <SectionTitle icon={BarChart3} title="Topic Performance" />
             <div className="space-y-4">

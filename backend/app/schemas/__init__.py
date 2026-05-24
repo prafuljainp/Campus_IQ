@@ -236,3 +236,8 @@ class AptitudeAnswerSubmit(BaseModel):
 class AptitudeAttemptSubmit(BaseModel):
     answers: List[AptitudeAnswerSubmit]
     duration_seconds: Optional[int] = None
+
+
+class AptitudePracticeStart(BaseModel):
+    topics: Optional[List[str]] = None
+    question_count: int = 5

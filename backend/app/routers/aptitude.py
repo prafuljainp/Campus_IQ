@@ -11,6 +11,8 @@ from app.models import (
     ActivityLog,
     AptitudeAttempt,
     AptitudeAttemptAnswer,
+    AptitudePracticeAttempt,
+    AptitudePracticeAttemptAnswer,
     AptitudeQuestion,
     AptitudeTest,
     AptitudeTestQuestion,
@@ -18,6 +20,7 @@ from app.models import (
 )
 from app.schemas import (
     AptitudeAttemptSubmit,
+    AptitudePracticeStart,
     AptitudeQuestionCreate,
     AptitudeQuestionUpdate,
     AptitudeTestCreate,
@@ -201,6 +204,126 @@ def _build_recommendations(score: float, topic_breakdown: dict):
     return recommendations
 
 
+def _practice_summary(attempt: Optional[AptitudePracticeAttempt]):
+    if not attempt:
+        return None
+    return {
+        "id": attempt.id,
+        "topics": attempt.topics or [],
+        "status": attempt.status,
+        "started_at": attempt.started_at,
+        "submitted_at": attempt.submitted_at,
+        "score": round(attempt.score or 0, 2),
+        "accuracy": round(attempt.accuracy or 0, 2),
+        "correct_answers": attempt.correct_answers or 0,
+        "total_questions": attempt.total_questions or 0,
+        "duration_seconds": attempt.duration_seconds or 0,
+        "recommendations": attempt.recommendations or [],
+    }
+
+
+def _practice_result(attempt: AptitudePracticeAttempt):
+    answer_map = {answer.question_id: answer.selected_option for answer in attempt.answers}
+    include_answers = attempt.status == "submitted"
+    questions = [
+        _question_payload(
+            answer.question,
+            include_answer=include_answers,
+            selected_option=answer_map.get(answer.question_id) if include_answers else None,
+        )
+        for answer in attempt.answers
+        if answer.question and answer.question.is_active
+    ]
+    return {
+        **_practice_summary(attempt),
+        "title": "Focus Practice",
+        "topic_breakdown": attempt.topic_breakdown or {},
+        "questions": questions,
+    }
+
+
+def _topic_performance_from_attempts(attempts: list[AptitudeAttempt]):
+    topic_totals = {}
+    for attempt in attempts:
+        for topic, values in (attempt.topic_breakdown or {}).items():
+            bucket = topic_totals.setdefault(topic, {"total": 0, "correct": 0})
+            bucket["total"] += values.get("total", 0)
+            bucket["correct"] += values.get("correct", 0)
+
+    performance = []
+    for topic, values in topic_totals.items():
+        total = values["total"]
+        correct = values["correct"]
+        performance.append({
+            "topic": topic,
+            "total": total,
+            "correct": correct,
+            "accuracy": round((correct / total) * 100, 2) if total else 0,
+        })
+    return performance
+
+
+def _weak_topic_summaries(db: Session, student_id: int):
+    attempts = (
+        db.query(AptitudeAttempt)
+        .filter(AptitudeAttempt.student_id == student_id, AptitudeAttempt.status == "submitted")
+        .order_by(AptitudeAttempt.submitted_at.desc())
+        .all()
+    )
+    performance = _topic_performance_from_attempts(attempts)
+    performance.sort(key=lambda item: (item["accuracy"], -item["total"]))
+
+    weak_topics = [item for item in performance if item["accuracy"] < 70]
+    if not weak_topics:
+        weak_topics = performance[:3]
+
+    practice_attempts = (
+        db.query(AptitudePracticeAttempt)
+        .filter(AptitudePracticeAttempt.student_id == student_id, AptitudePracticeAttempt.status == "submitted")
+        .order_by(AptitudePracticeAttempt.submitted_at.desc())
+        .all()
+    )
+
+    for item in weak_topics:
+        scores = [
+            attempt.score or 0
+            for attempt in practice_attempts
+            if item["topic"] in (attempt.topics or [])
+        ]
+        item["practice_attempts"] = len(scores)
+        item["best_practice_score"] = round(max(scores), 2) if scores else None
+
+    return weak_topics
+
+
+def _select_practice_questions(db: Session, topics: list[str], question_count: int):
+    limit = max(3, min(question_count or 5, 10))
+    clean_topics = [topic for topic in topics if topic]
+    questions = []
+
+    if clean_topics:
+        questions = (
+            db.query(AptitudeQuestion)
+            .filter(AptitudeQuestion.topic.in_(clean_topics), AptitudeQuestion.is_active == True)
+            .order_by(AptitudeQuestion.difficulty, AptitudeQuestion.id)
+            .limit(limit)
+            .all()
+        )
+
+    if len(questions) < limit:
+        existing_ids = [question.id for question in questions]
+        fallback_query = db.query(AptitudeQuestion).filter(AptitudeQuestion.is_active == True)
+        if existing_ids:
+            fallback_query = fallback_query.filter(~AptitudeQuestion.id.in_(existing_ids))
+        questions.extend(
+            fallback_query.order_by(AptitudeQuestion.category, AptitudeQuestion.topic, AptitudeQuestion.id)
+            .limit(limit - len(questions))
+            .all()
+        )
+
+    return questions[:limit]
+
+
 @router.get("/admin/dashboard")
 def get_staff_dashboard(
     db: Session = Depends(get_db),
@@ -335,6 +458,12 @@ def get_aptitude_dashboard(
     )
     strongest_topic = topic_performance[0]["topic"] if topic_performance else None
     focus_topic = topic_performance[-1]["topic"] if topic_performance else None
+    latest_practice = (
+        db.query(AptitudePracticeAttempt)
+        .filter(AptitudePracticeAttempt.student_id == student.id, AptitudePracticeAttempt.status == "submitted")
+        .order_by(AptitudePracticeAttempt.submitted_at.desc())
+        .first()
+    )
 
     return {
         "summary": {
@@ -348,7 +477,166 @@ def get_aptitude_dashboard(
         "tests": [_test_summary(db, test, student.id) for test in tests],
         "recent_attempts": [_attempt_summary(attempt) for attempt in attempts[:8]],
         "topic_performance": topic_performance,
+        "focus_practice": {
+            "weak_topics": _weak_topic_summaries(db, student.id)[:5],
+            "latest_practice": _practice_summary(latest_practice),
+        },
     }
+
+
+@router.get("/practice/weak-topics")
+def get_weak_topic_practice(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    student = _student_or_403(current_user)
+    latest_practice = (
+        db.query(AptitudePracticeAttempt)
+        .filter(AptitudePracticeAttempt.student_id == student.id, AptitudePracticeAttempt.status == "submitted")
+        .order_by(AptitudePracticeAttempt.submitted_at.desc())
+        .first()
+    )
+    weak_topics = _weak_topic_summaries(db, student.id)[:5]
+    return {
+        "weak_topics": weak_topics,
+        "recommended_topics": [item["topic"] for item in weak_topics[:3]],
+        "latest_practice": _practice_summary(latest_practice),
+    }
+
+
+@router.post("/practice/start", status_code=201)
+def start_weak_topic_practice(
+    data: AptitudePracticeStart,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    student = _student_or_403(current_user)
+    weak_topics = _weak_topic_summaries(db, student.id)
+    selected_topics = data.topics or [item["topic"] for item in weak_topics[:3]]
+    questions = _select_practice_questions(db, selected_topics, data.question_count)
+    if not questions:
+        raise HTTPException(status_code=400, detail="No active practice questions are available")
+
+    topics = sorted({question.topic for question in questions})
+    attempt = AptitudePracticeAttempt(
+        student_id=student.id,
+        topics=topics,
+        status="in_progress",
+        total_questions=len(questions),
+    )
+    db.add(attempt)
+    db.flush()
+    for question in questions:
+        db.add(AptitudePracticeAttemptAnswer(
+            attempt_id=attempt.id,
+            question_id=question.id,
+        ))
+    db.commit()
+
+    attempt = (
+        db.query(AptitudePracticeAttempt)
+        .options(joinedload(AptitudePracticeAttempt.answers).joinedload(AptitudePracticeAttemptAnswer.question))
+        .filter(AptitudePracticeAttempt.id == attempt.id)
+        .first()
+    )
+    return _practice_result(attempt)
+
+
+@router.post("/practice/{attempt_id}/submit")
+def submit_weak_topic_practice(
+    attempt_id: int,
+    data: AptitudeAttemptSubmit,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    student = _student_or_403(current_user)
+    attempt = (
+        db.query(AptitudePracticeAttempt)
+        .options(joinedload(AptitudePracticeAttempt.answers).joinedload(AptitudePracticeAttemptAnswer.question))
+        .filter(AptitudePracticeAttempt.id == attempt_id, AptitudePracticeAttempt.student_id == student.id)
+        .first()
+    )
+    if not attempt:
+        raise HTTPException(status_code=404, detail="Practice attempt not found")
+    if attempt.status == "submitted":
+        return _practice_result(attempt)
+
+    answers_by_question = {answer.question_id: answer for answer in data.answers}
+    correct = 0
+    topic_breakdown = {}
+
+    for answer in attempt.answers:
+        question = answer.question
+        if not question or not question.is_active:
+            continue
+        submitted = answers_by_question.get(question.id)
+        selected_option = submitted.selected_option if submitted else None
+        time_spent = submitted.time_spent_seconds if submitted else 0
+
+        if selected_option is not None and (selected_option < 0 or selected_option >= len(question.options or [])):
+            raise HTTPException(status_code=400, detail=f"Invalid option for question {question.id}")
+
+        is_correct = selected_option == question.correct_option
+        if is_correct:
+            correct += 1
+
+        bucket = topic_breakdown.setdefault(question.topic, {"total": 0, "correct": 0})
+        bucket["total"] += 1
+        bucket["correct"] += 1 if is_correct else 0
+
+        answer.selected_option = selected_option
+        answer.is_correct = is_correct
+        answer.time_spent_seconds = max(0, time_spent or 0)
+
+    total = sum(values["total"] for values in topic_breakdown.values())
+    score = round((correct / total) * 100, 2) if total else 0
+    for values in topic_breakdown.values():
+        values["accuracy"] = round((values["correct"] / values["total"]) * 100, 2) if values["total"] else 0
+
+    attempt.status = "submitted"
+    attempt.submitted_at = datetime.utcnow()
+    attempt.duration_seconds = data.duration_seconds or int((attempt.submitted_at - attempt.started_at).total_seconds())
+    attempt.total_questions = total
+    attempt.correct_answers = correct
+    attempt.score = score
+    attempt.accuracy = score
+    attempt.topic_breakdown = topic_breakdown
+    attempt.recommendations = _build_recommendations(score, topic_breakdown)
+
+    db.add(ActivityLog(
+        user_id=current_user.id,
+        action="APTITUDE_PRACTICE_SUBMITTED",
+        entity_type="aptitude_practice_attempt",
+        entity_id=attempt.id,
+        details=f"Focus practice: {correct}/{total} ({score}%)",
+    ))
+    db.commit()
+
+    attempt = (
+        db.query(AptitudePracticeAttempt)
+        .options(joinedload(AptitudePracticeAttempt.answers).joinedload(AptitudePracticeAttemptAnswer.question))
+        .filter(AptitudePracticeAttempt.id == attempt_id)
+        .first()
+    )
+    return _practice_result(attempt)
+
+
+@router.get("/practice/{attempt_id}")
+def get_weak_topic_practice_attempt(
+    attempt_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    student = _student_or_403(current_user)
+    attempt = (
+        db.query(AptitudePracticeAttempt)
+        .options(joinedload(AptitudePracticeAttempt.answers).joinedload(AptitudePracticeAttemptAnswer.question))
+        .filter(AptitudePracticeAttempt.id == attempt_id, AptitudePracticeAttempt.student_id == student.id)
+        .first()
+    )
+    if not attempt:
+        raise HTTPException(status_code=404, detail="Practice attempt not found")
+    return _practice_result(attempt)
 
 
 @router.get("/tests")

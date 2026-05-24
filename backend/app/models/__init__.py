@@ -132,6 +132,7 @@ class Student(Base):
     placements = relationship("Placement", back_populates="student")
     internships = relationship("Internship", back_populates="student")
     aptitude_attempts = relationship("AptitudeAttempt", back_populates="student")
+    aptitude_practice_attempts = relationship("AptitudePracticeAttempt", back_populates="student")
 
 
 # ─── Faculty Model ────────────────────────────────────────────────────────────
@@ -354,6 +355,46 @@ class AptitudeAttemptAnswer(Base):
 
     attempt = relationship("AptitudeAttempt", back_populates="answers")
     question = relationship("AptitudeQuestion", back_populates="answers")
+
+
+class AptitudePracticeAttempt(Base):
+    __tablename__ = "aptitude_practice_attempts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
+    topics = Column(JSON, nullable=False)
+    status = Column(String(50), default="in_progress")
+    started_at = Column(DateTime, default=datetime.utcnow)
+    submitted_at = Column(DateTime, nullable=True)
+    duration_seconds = Column(Integer, default=0)
+    score = Column(Float, default=0.0)
+    total_questions = Column(Integer, default=0)
+    correct_answers = Column(Integer, default=0)
+    accuracy = Column(Float, default=0.0)
+    topic_breakdown = Column(JSON, nullable=True)
+    recommendations = Column(JSON, nullable=True)
+
+    student = relationship("Student", back_populates="aptitude_practice_attempts")
+    answers = relationship(
+        "AptitudePracticeAttemptAnswer",
+        back_populates="attempt",
+        cascade="all, delete-orphan",
+        order_by="AptitudePracticeAttemptAnswer.id",
+    )
+
+
+class AptitudePracticeAttemptAnswer(Base):
+    __tablename__ = "aptitude_practice_attempt_answers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    attempt_id = Column(Integer, ForeignKey("aptitude_practice_attempts.id"), nullable=False)
+    question_id = Column(Integer, ForeignKey("aptitude_questions.id"), nullable=False)
+    selected_option = Column(Integer, nullable=True)
+    is_correct = Column(Boolean, default=False)
+    time_spent_seconds = Column(Integer, default=0)
+
+    attempt = relationship("AptitudePracticeAttempt", back_populates="answers")
+    question = relationship("AptitudeQuestion")
 
 
 # ─── Skill Models ─────────────────────────────────────────────────────────────

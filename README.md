@@ -11,7 +11,7 @@ The system includes a FastAPI backend, a React/Vite frontend, JWT authentication
 - Academic analytics, placement analytics, student success insights, and activity logs
 - AI-assisted analysis for placement readiness, skill gaps, recommendations, and student health scores
 - Job portal, notifications, alumni/mentor, and enterprise-oriented modules
-- Placement training with timed aptitude, technical MCQ, coding logic, debugging, SQL, verbal, and reasoning tests
+- Placement training with timed aptitude, technical MCQ, coding logic, debugging, SQL, verbal, reasoning, and weak-topic focus practice
 - Local development setup using SQLite, FastAPI, Vite, and seeded demo users
 
 ## Tech Stack
@@ -86,6 +86,7 @@ Placement training:
 - Attempt submission and scoring
 - Answer review with explanations
 - Topic-wise performance breakdown
+- Weak-topic focus practice generated from student attempt history
 - Staff question bank management
 - Test publishing/unpublishing
 - Attempt analytics for staff
@@ -208,6 +209,7 @@ Student flow:
 4. Attend the timed test.
 5. Submit answers.
 6. Review score, accuracy, correct answers, explanations, and topic performance.
+7. Use Focus Practice to attempt a short weak-topic quiz based on previous results.
 
 Staff flow:
 1. Add training questions with options, answer keys, category, topic, difficulty, and explanations.
