@@ -106,6 +106,7 @@ If `npm run dev` fails with `spawn C:\Program Files\dotnet ENOENT`, fix the curr
 
 ```powershell
 $env:ComSpec = "$env:WINDIR\System32\cmd.exe"
+npm run dev
 ```
 
 ## One-Command Local Start
